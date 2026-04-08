@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oxkio Prototype v4</title>
+  <style>
+    :root{
+      --bg:#071126; --bg2:#0c1730; --card:rgba(255,255,255,.06); --line:rgba(255,255,255,.10);
+      --text:#eef4ff; --muted:#9fb0cf; --blue:#2ea8ff; --blue2:#2563eb; --input:#ffffff;
+      --shadow:0 18px 50px rgba(0,0,0,.35); --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(46,168,255,.18), transparent 30%),
+        radial-gradient(circle at 80% 20%, rgba(37,99,235,.15), transparent 28%),
+        linear-gradient(135deg,var(--bg),var(--bg2));
+      min-height:100vh}
+    .wrap{max-width:760px;margin:0 auto;padding:14px}.hidden{display:none!important}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+      padding:10px 12px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.04);
+      backdrop-filter: blur(10px);box-shadow:var(--shadow);margin-bottom:20px}
+    .brand{display:flex;align-items:center;gap:14px}
+    .brand .oxlogo{width:44px;height:44px;border-radius:18px;background:linear-gradient(135deg,var(--blue),var(--blue2));
+      display:grid;place-items:center;font-weight:900;color:white;overflow:hidden;flex-shrink:0;box-shadow:0 0 40px rgba(46,168,255,.2)}
+    .brand .oxlogo img{width:100%;height:100%;object-fit:contain;background:#000}
+    .title{font-size:1rem;font-weight:800;letter-spacing:.3px}.sub{font-size:.78rem;color:var(--muted)}
+    .btn{border:none;border-radius:14px;padding:10px 12px;cursor:pointer;font-weight:700;transition:.2s transform,.2s background}
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff}
+    .btn-soft{background:#dfe9f8;color:#0b1426}.btn-dark{background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--line)}
+    .grid{display:grid;gap:20px}.main{grid-template-columns:1fr}
+    .card{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);backdrop-filter: blur(10px);box-shadow:var(--shadow)}
+    .hero{min-height:205px;position:relative;overflow:hidden;padding:18px;display:flex;flex-direction:column;justify-content:space-between;
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.03)),
+                 radial-gradient(circle at 50% 0%, rgba(46,168,255,.18), transparent 35%)}
+    .client-wall{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;opacity:.10;
+      font-size:2rem;font-weight:900;letter-spacing:.18em;text-transform:uppercase}
+    .client-wall img{max-width:58%;max-height:38%;object-fit:contain;filter:grayscale(100%) contrast(1.1)}
+    .avatar-stage{position:relative;z-index:2;display:grid;place-items:center;flex:1}
+    .avatar-circle{width:64px;height:64px;border-radius:50%;background:linear-gradient(180deg,#20304e,#0b1426);
+      border:1px solid rgba(46,168,255,.25);box-shadow:0 0 0 10px rgba(46,168,255,.05), 0 0 80px rgba(46,168,255,.16);
+      display:grid;place-items:center;position:relative}
+    .avatar-circle::before{content:"";position:absolute;inset:12px;border-radius:50%;
+      background:radial-gradient(circle at 50% 35%, rgba(255,255,255,.18), transparent 30%)}
+    .avatar-real{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.14);
+      box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .avatar-head{width:16px;height:16px;border-radius:50%;background:#dfe9f8;position:relative;top:-6px}
+    .avatar-body{width:28px;height:18px;border-radius:50px 50px 18px 18px;background:#20304e;border:1px solid rgba(255,255,255,.08);position:relative;top:-2px}
+    .avatar-logo{width:40px;height:40px;border-radius:20px;display:grid;place-items:center;background:linear-gradient(135deg, rgba(46,168,255,.12), rgba(37,99,235,.1));
+      border:1px solid rgba(46,168,255,.18);overflow:hidden}
+    .avatar-logo img{width:100%;height:100%;object-fit:contain;background:#000}
+    .desk{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:82%;height:50px;border-radius:24px 24px 10px 10px;
+      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));border:1px solid var(--line)}
+    .status{position:relative;z-index:2;text-align:center}
+    .status .pill{display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(46,168,255,.14);
+      border:1px solid rgba(46,168,255,.22);color:#cfe9ff;font-weight:700}
+    .hero h2{margin:0 0 6px;font-size:1.45rem}.hero p{margin:0;color:var(--muted)}
+    .panel{padding:14px}.label{font-size:.92rem;color:var(--muted);margin-bottom:8px}
+    textarea,input[type=text],input[type=password],select{
+      width:100%;border-radius:16px;border:1px solid #dfe7f7;background:var(--input);color:#111827;padding:12px;font-size:1rem;outline:none}
+    textarea{min-height:96px;resize:vertical}.row{display:flex;gap:12px;flex-wrap:wrap}.row > *{flex:1}
+    .messages{display:flex;flex-direction:column;gap:10px;max-height:420px;overflow:auto}
+    .msg{max-width:96%;padding:12px 18px;border-radius:18px;line-height:1.65;border:1px solid var(--line);font-size:1rem}
+    .msg.user{align-self:flex-end;background:#1d4ed8}.msg.oxkio{align-self:flex-start;background:#111827}.msg b{display:block;margin-bottom:6px}
+    .proposals{display:grid;gap:12px}.proposal{padding:14px;border-radius:16px;background:#0c1427;border:1px solid var(--line);font-size:.98rem;line-height:1.55}
+    .footer-note{margin-top:10px;color:var(--muted);font-size:.9rem}.login-wrap{min-height:100vh;display:grid;place-items:center;padding:20px}
+    .login-box{width:min(100%,420px);padding:20px}.center{text-align:center}.small{font-size:.9rem;color:var(--muted)}.spacer{height:10px}
+    .section-title{font-size:1.08rem;font-weight:800;margin-bottom:12px}.upload{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.upload input{display:none}
+    .tag{display:inline-block;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#d8e5ff;font-size:.85rem}
+    .note{font-size:.88rem;color:#b6c4df;margin-top:8px}
+    @media (max-width: 920px){.main{grid-template-columns:1fr}.client-wall{font-size:1.55rem}.brand .oxlogo{width:58px;height:58px}}
+  </style>
+</head>
+<body>
+  <div id="login" class="login-wrap">
+    <div class="card login-box">
+      <div class="center">
+        <div class="brand" style="justify-content:center;margin-bottom:12px">
+          <div class="oxlogo" id="loginOxLogo">O</div>
+          <div><div class="title">OXKIO</div><div class="sub">Acceso de prueba familiar</div></div>
+        </div>
+      </div>
+      <div class="label">Usuario</div><input id="username" type="text" placeholder="admin o familia" />
+      <div class="spacer"></div><div class="label">Contraseña</div><input id="password" type="password" placeholder="••••••••" />
+      <div class="spacer"></div><label style="display:flex;align-items:center;gap:8px;font-size:.92rem;color:#cfe0ff"><input id="rememberMe" type="checkbox" style="width:auto"> Recordarme en este dispositivo</label><div class="spacer"></div><button class="btn btn-primary" style="width:100%" onclick="login()">Entrar</button>
+      <div class="spacer"></div>
+      <button class="btn btn-dark" style="width:100%" onclick="toggleRegister()">No estoy registrado</button>
+      <div id="registerBox" class="hidden" style="margin-top:14px">
+        <div class="label">Nuevo usuario</div><input id="newUsername" type="text" placeholder="elige usuario" />
+        <div class="spacer"></div><div class="label">Nueva contraseña</div><input id="newPassword" type="password" placeholder="elige contraseña" />
+        <div class="spacer"></div><button class="btn btn-soft" style="width:100%" onclick="registerUser()">Crear acceso</button>
+        <div class="note">Registro local de prueba en este navegador.</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="small center">Admin: <b>admin</b> / <b>admin123</b><br/>Familia: <b>familia</b> / <b>familia123</b></div>
+      <div id="loginMsg" class="small center" style="margin-top:10px;color:#ffb4b4"></div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand">
+          <div class="oxlogo" id="topOxLogo">O</div>
+          <div><div class="title">OXKIO</div><div class="sub">Una nueva forma de dirigir</div></div>
+        </div>
+        <div style="text-align:center"><div class="title" id="companyNameTop">Xantalalshop</div></div>
+        <div class="row" style="width:auto;gap:10px"><button class="btn btn-dark" onclick="toggleSettings()">⚙ Configuración</button><button class="btn btn-dark" onclick="resetDemo()">Reiniciar demo</button><button class="btn btn-primary" onclick="logout()">Salir</button></div>
+      </div>
+
+      <div class="grid main">
+        <div class="grid">
+          <div class="card hero">
+            <div class="client-wall" id="clientWallText">CLIENTE</div>
+            <div class="client-wall hidden" id="clientWallLogoWrap"><img id="clientWallLogo" alt="Logo cliente"/></div>
+            <div class="status"><span class="pill" id="statusText">Listo</span></div>
+            <div class="avatar-stage">
+              <div class="avatar-circle">
+                <div id="avatarFicticio"><div class="avatar-head"></div><div class="avatar-body"></div></div>
+                <div id="avatarLogoWrap" class="avatar-logo hidden"><img id="avatarLogoImg" alt="Logo cliente en avatar" /></div>
+                <img id="avatarRealImg" class="avatar-real hidden" alt="Avatar real" />
+              </div>
+              <div class="desk"></div>
+            </div>
+            <div class="center" style="position:relative;z-index:2">
+              <h2 style="font-size:1.02rem">Oxkio</h2>
+              <p>Escribe o habla. Oxkio responde y te propone una acción.</p>
+              
+            </div>
+          </div>
+
+          <div class="card panel">
+            <div class="section-title">Interactúa con Oxkio</div>
+            <div class="label">Escribe o usa la voz</div>
+            <textarea id="inputText" placeholder="Ejemplo: Organízame el día, resume este documento o propón una automatización."></textarea>
+            <div class="spacer"></div>
+            <div class="row"><button class="btn btn-soft" onclick="comprobarVoz()">Comprobar voz</button><button class="btn btn-primary" id="voiceBtn" onclick="hablarConOxkio()">Hablar con Oxkio</button><button class="btn btn-dark" onclick="enviarMensaje()">Enviar</button></div>
+            <div class="footer-note" id="supportText">Puedes hablar o escribir. En móvil se prioriza el flujo principal y lo secundario queda oculto.</div>
+          </div>
+        </div>
+
+        <div class="grid">
+
+          <div class="card panel hidden" id="memoryPanel">
+            <div class="section-title">Memoria rápida</div>
+            <div class="note" style="margin-bottom:10px">Oxkio separa lo personal de lo profesional para no mezclar contexto.</div>
+            <div class="row">
+              <button class="btn btn-soft" onclick="verMemoria('personal')">Ver personal</button>
+              <button class="btn btn-soft" onclick="verMemoria('profesional')">Ver profesional</button>
+              <button class="btn btn-dark" onclick="limpiarMemoria()">Limpiar memoria</button>
+            </div>
+            <div class="spacer"></div>
+            <div id="memoryBox" class="proposal">Sin elementos guardados todavía.</div>
+          </div>
+
+          <div class="card panel">
+            <div class="section-title">Respuestas de Oxkio</div>
+            
+            <div class="messages" id="messages"></div>
+          </div>
+
+          <div class="card panel hidden" id="settingsPanel">
+            <div class="section-title">Configuración rápida</div>
+            <div class="label">Nombre empresa / cliente</div><input id="companyInput" type="text" value="Xantalalshop"/>
+            <div class="spacer"></div>
+
+            <div class="label">Tipo de avatar</div>
+            <select id="avatarMode" onchange="cambiarAvatar()">
+              <option value="ficticio">Ente ficticio animado</option>
+              <option value="logo">Solo logo cliente</option>
+              <option value="real">Avatar real</option>
+            </select>
+            <div class="note">El avatar es opcional y ahora es más discreto. La prioridad sigue siendo la información, las respuestas y la propuesta de acción.</div>
+
+            <div class="spacer"></div>
+
+            <div id="adminOxLogoBlock" style="display:none">
+              <div class="label">Logo Oxkio (solo admin)</div>
+              <div class="upload"><label class="btn btn-dark">Subir logo Oxkio<input id="oxLogoFile" type="file" accept="image/*" onchange="loadLogo(event, 'oxkio')" /></label><span class="tag">Marca protegida</span></div>
+              <div class="spacer"></div>
+            </div>
+
+            <div class="label">Logo cliente detrás del avatar (opcional)</div>
+            <div class="upload"><label class="btn btn-dark">Subir logo cliente<input id="clientLogoFile" type="file" accept="image/*" onchange="loadLogo(event, 'client')" /></label><span class="tag">Visible en fondo y avatar logo</span></div>
+            <div class="spacer"></div>
+
+            <div class="label">Avatar real (opcional)</div>
+            <div class="upload"><label class="btn btn-dark">Subir avatar real<input id="realAvatarFile" type="file" accept="image/*" onchange="loadLogo(event, 'realAvatar')" /></label><span class="tag">Para modo avatar real</span></div>
+            <div class="spacer"></div>
+
+            <div class="row"><button class="btn btn-soft" onclick="guardarPreferencias()">Guardar preferencias</button><button class="btn btn-dark" onclick="quitarLogoCliente()">Quitar logo cliente</button></div>
+          </div>
+
+          <div class="card panel">
+            <div class="section-title">Propuesta actual</div>
+            
+            <div class="proposals" id="proposalArea"><div class="proposal">Oxkio activo. Listo para organizar, proponer y ejecutar.</div></div>
+            <div class="spacer"></div>
+            <div class="row"><button class="btn btn-primary" onclick="autorizar()">Autorizar</button><button class="btn btn-soft" onclick="modificar()">Modificar</button><button class="btn btn-dark" onclick="cancelarAccion()">Cancelar</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const customUsers = JSON.parse(localStorage.getItem("ox_custom_users") || "{}");
+  const state = {
+    user: null,
+    company: localStorage.getItem("ox_company") || "Xantalalshop",
+    oxLogo: localStorage.getItem("ox_logo") || "",
+    clientLogo: localStorage.getItem("ox_client_logo") || "",
+    avatarReal: localStorage.getItem("ox_avatar_real") || "",
+    avatarMode: localStorage.getItem("ox_avatar_mode") || "ficticio",
+    lastProposal: "Oxkio activo. Listo para organizar, proponer y ejecutar.",
+    messages: JSON.parse(localStorage.getItem("ox_messages") || "[]"),
+    memory: JSON.parse(localStorage.getItem("ox_memory") || '{"personal":[],"profesional":[]}'),
+  };
+
+  function saveMessages(){ localStorage.setItem("ox_messages", JSON.stringify(state.messages)); }
+  function addMessage(role, text){ state.messages.push({ role, text }); saveMessages(); renderMessages(); }
+  function renderMessages(){
+    const box = document.getElementById("messages"); box.innerHTML = "";
+    if (state.messages.length === 0){ addMessage("oxkio", "Oxkio activo. Puedes escribir o hablar. Estoy listo para organizar, proponer y ejecutar con tu autorización."); return; }
+    state.messages.forEach(m => {
+      const div = document.createElement("div");
+      div.className = "msg " + (m.role === "usuario" ? "user" : "oxkio");
+      div.innerHTML = `<b>${m.role === "usuario" ? "Tú" : "Oxkio"}</b><span style="white-space:pre-line">${m.text}</span>`;
+      box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+  function setStatus(text){ document.getElementById("statusText").textContent = text; }
+
+  function saveMemory(){ localStorage.setItem("ox_memory", JSON.stringify(state.memory)); }
+  function toggleSettings(){ document.getElementById("settingsPanel").classList.toggle("hidden"); document.getElementById("memoryPanel").classList.toggle("hidden"); }
+  function remember(bucket, item){
+    if (!item) return;
+    state.memory[bucket].push(item);
+    if (state.memory[bucket].length > 20) state.memory[bucket] = state.memory[bucket].slice(-20);
+    saveMemory();
+  }
+  function verMemoria(bucket){
+    const box = document.getElementById("memoryBox");
+    const items = state.memory[bucket] || [];
+    if (items.length === 0){
+      box.innerHTML = `No hay elementos guardados en memoria ${bucket}.`;
+      return;
+    }
+    box.innerHTML = `<b>Memoria ${bucket}</b><br/><br/>` + items.map((x, i) => `${i+1}. ${x}`).join("<br/>");
+  }
+  function limpiarMemoria(){
+    state.memory = { personal: [], profesional: [] };
+    saveMemory();
+    document.getElementById("memoryBox").innerHTML = "Memoria borrada.";
+    addMessage("oxkio", "He limpiado la memoria rápida de trabajo.");
+  }
+
+  function buildResponse(input){
+    const t = input.toLowerCase();
+
+    if (t.includes("curso") || t.includes("video") || t.includes("blog") || t.includes("resumir")) {
+      remember("profesional", "Cursos de IA y vídeos para resumir y transformar en contenido web/blog.");
+      return `Contexto: quieres convertir cursos y vídeos de IA en contenido útil para la web de xantalalshop.com.
+Lectura inteligente: no conviene publicar solo resúmenes; conviene crear un historial reutilizable con ideas, aprendizajes y posibles artículos.
+Decisión recomendada: crear una ficha por contenido con 1) título, 2) fuente, 3) resumen ejecutivo, 4) ideas clave, 5) aplicación práctica, 6) posible post para blog.
+Impacto: conviertes formación en activo reutilizable para web, blog y posicionamiento.
+Siguiente paso: si me pasas la entrada o el texto base, puedo extraer la información principal y devolverte una ficha lista para blog o historial.`;
+    }
+
+    if (t.includes("día") || t.includes("agenda") || t.includes("organiza")) {
+      remember("personal", "Organización del día / agenda personal y profesional.");
+      return `Contexto: necesitas ordenar tu jornada personal y profesional.
+Lectura inteligente: hay riesgo de dispersión si mezclas tareas, recados, familia y trabajo sin bloques claros.
+Decisión recomendada: separar el día en 3 capas: personal, profesional y seguimiento.
+Impacto: más foco, menos olvidos y mejor conciliación.
+Siguiente paso: puedo proponerte una agenda priorizada por bloques, ¿la genero?`;
+    }
+
+    if (t.includes("correo") || t.includes("email") || t.includes("mail")) {
+      remember("profesional", "Gestión y priorización de correo.");
+      return `Contexto: quieres conciliar el correo con tus prioridades reales.
+Lectura inteligente: el correo suele mezclar ruido con asuntos críticos de familia, proyectos y clientes.
+Decisión recomendada: clasificar en urgente, seguimiento y pendiente delegable.
+Impacto: reduces tiempo de revisión y respondes antes a lo importante.
+Siguiente paso: puedo prepararte una bandeja priorizada y una respuesta tipo para cada bloque, ¿lo hago?`;
+    }
+
+    if (t.includes("renov") || t.includes("dni") || t.includes("seguro") || t.includes("tarjeta") || t.includes("médico") || t.includes("medico")) {
+      remember("personal", "Renovaciones, seguros, tarjetas o citas médicas.");
+      return `Contexto: has mencionado obligaciones personales o familiares con fecha sensible.
+Lectura inteligente: renovaciones, seguros, tarjetas y citas médicas generan estrés cuando no están centralizados.
+Decisión recomendada: crear una lista de avisos con fecha, responsable y recordatorio anticipado.
+Impacto: evitas vencimientos, recargos y olvidos que afectan a la familia.
+Siguiente paso: puedo convertirlo en un calendario de avisos priorizados, ¿quieres que lo organice?`;
+    }
+
+    if (t.includes("hijo") || t.includes("hija") || t.includes("familia") || t.includes("colegio")) {
+      remember("personal", "Temas familiares, hijos o colegio.");
+      return `Contexto: estás gestionando asuntos familiares que deben convivir con tu actividad profesional.
+Lectura inteligente: la conciliación falla cuando los temas familiares no tienen un espacio propio dentro del sistema.
+Decisión recomendada: separar tareas familiares por urgencia, fecha y dependencia de terceros.
+Impacto: ganas tranquilidad y visibilidad sin mezclarlo todo con el trabajo.
+Siguiente paso: puedo estructurarte un panel familiar con avisos, citas y tareas, ¿lo preparo?`;
+    }
+
+    if (t.includes("proyecto") || t.includes("cliente") || t.includes("cita") || t.includes("reunión") || t.includes("reunion")) {
+      remember("profesional", "Proyectos, clientes o reuniones.");
+      return `Contexto: estás manejando actividad profesional con impacto directo en resultados.
+Lectura inteligente: proyectos, clientes y reuniones necesitan seguimiento con fechas, decisiones y próximos pasos.
+Decisión recomendada: resumir cada frente en objetivo, estado, bloqueo y siguiente acción.
+Impacto: más control ejecutivo y menos pérdida de contexto.
+Siguiente paso: puedo convertirlo en un tablero de seguimiento profesional, ¿lo genero?`;
+    }
+
+    if (t.includes("automat") || t.includes("proceso")) {
+      remember("profesional", "Automatización de procesos o tareas repetitivas.");
+      return `Contexto: buscas optimizar una tarea repetitiva o un flujo de trabajo.
+Lectura inteligente: si el proceso se repite y depende de pasos manuales, hay margen claro de automatización.
+Decisión recomendada: documentar entrada, decisión y salida del proceso antes de automatizarlo.
+Impacto: ahorras tiempo, reduces errores y escalas mejor.
+Siguiente paso: puedo proponerte el flujo base de automatización, ¿lo desarrollo?`;
+    }
+
+    if (t.includes("documento") || t.includes("pdf") || t.includes("archivo")) {
+      remember("profesional", "Análisis de documentos, pdf o archivos.");
+      return `Contexto: necesitas trabajar con información contenida en documentos o archivos.
+Lectura inteligente: el valor no está en leer todo, sino en extraer decisiones, riesgos y acciones.
+Decisión recomendada: resumir el contenido y traducirlo a próximos pasos.
+Impacto: aceleras análisis y ejecutas con más claridad.
+Siguiente paso: puedo prepararte un resumen ejecutivo con acciones, ¿quieres que lo haga?`;
+    }
+
+    return `Contexto: he recibido tu petición y la he clasificado entre vida personal y actividad profesional.
+Lectura inteligente: para que Oxkio sea útil debe ordenar información, detectar prioridades y proponerte una decisión.
+Decisión recomendada: estructurar primero, actuar después y ejecutar solo con tu autorización.
+Impacto: más control, menos ruido y mejor conciliación.
+Siguiente paso: si me das un poco más de detalle, te devuelvo una propuesta ejecutiva concreta.`;
+  }
+  function renderProposal(text){ state.lastProposal = text; document.getElementById("proposalArea").innerHTML = `<div class="proposal" style="white-space:pre-line">${text}</div>`; }
+  function enviarMensaje(){
+    const input = document.getElementById("inputText"); const text = input.value.trim(); if (!text) return;
+    addMessage("usuario", text); const response = buildResponse(text); addMessage("oxkio", response); renderProposal(response); input.value = ""; setStatus("Respuesta generada"); if (text.toLowerCase().includes("familia") || text.toLowerCase().includes("seguro") || text.toLowerCase().includes("dni")) { verMemoria("personal"); } else { verMemoria("profesional"); }
+  }
+  function autorizar(){ addMessage("oxkio", "Autorización recibida. Acción marcada como aprobada y lista para ejecución supervisada."); renderProposal("Estado: autorizado.\nSiguiente paso: ejecutar manualmente o conectar automatización."); setStatus("Autorizado"); }
+  function modificar(){ addMessage("oxkio", "Indícame qué deseas cambiar en la propuesta actual y la reformularé."); setStatus("Esperando cambios"); }
+  function cancelarAccion(){ addMessage("oxkio", "Acción cancelada. No se ejecutará ningún paso hasta nueva orden."); renderProposal("Sin acción activa."); setStatus("Cancelado"); }
+  function login(){
+    const u = document.getElementById("username").value.trim(); const p = document.getElementById("password").value.trim();
+    const okDefault = (u === "admin" && p === "admin123") || (u === "familia" && p === "familia123");
+    const okCustom = customUsers[u] && customUsers[u] === p;
+    if (!(okDefault || okCustom)){ document.getElementById("loginMsg").textContent = "Usuario o contraseña incorrectos."; return; }
+    state.user = u; if (document.getElementById("rememberMe") && document.getElementById("rememberMe").checked) { localStorage.setItem("ox_user", u); } else { localStorage.removeItem("ox_user"); } showApp();
+  }
+  function logout(){ localStorage.removeItem("ox_user"); document.getElementById("app").classList.add("hidden"); document.getElementById("login").classList.remove("hidden"); }
+  function toggleSettings(){
+    document.getElementById("settingsPanel").classList.toggle("hidden");
+  }
+  function toggleRegister(){
+    document.getElementById("registerBox").classList.toggle("hidden");
+    document.getElementById("loginMsg").textContent = "";
+    document.getElementById("loginMsg").style.color = "#ffb4b4";
+  }
+  function registerUser(){
+    const u = document.getElementById("newUsername").value.trim();
+    const p = document.getElementById("newPassword").value.trim();
+    if (!u || !p){
+      document.getElementById("loginMsg").textContent = "Completa usuario y contraseña.";
+      return;
+    }
+    if (u === "admin" || u === "familia"){
+      document.getElementById("loginMsg").textContent = "Ese usuario está reservado.";
+      return;
+    }
+    customUsers[u] = p;
+    localStorage.setItem("ox_custom_users", JSON.stringify(customUsers));
+    document.getElementById("loginMsg").style.color = "#b7f7c2";
+    document.getElementById("loginMsg").textContent = "Registro creado. Ya puedes entrar.";
+    document.getElementById("newUsername").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("registerBox").classList.add("hidden");
+  }
+  function showApp(){
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+    document.getElementById("companyInput").value = state.company;
+    document.getElementById("companyNameTop").textContent = state.company;
+    document.getElementById("clientWallText").textContent = state.company.toUpperCase();
+    document.getElementById("avatarMode").value = state.avatarMode;
+    document.getElementById("adminOxLogoBlock").style.display = state.user === "admin" ? "block" : "none";
+    applyLogos();
+    cambiarAvatar();
+    renderMessages();
+    renderProposal(state.lastProposal);
+  }
+  function guardarPreferencias(){
+    state.company = document.getElementById("companyInput").value.trim() || "Xantalalshop";
+    state.avatarMode = document.getElementById("avatarMode").value;
+    localStorage.setItem("ox_company", state.company);
+    localStorage.setItem("ox_avatar_mode", state.avatarMode);
+    document.getElementById("companyNameTop").textContent = state.company;
+    document.getElementById("clientWallText").textContent = state.company.toUpperCase();
+    cambiarAvatar();
+    addMessage("oxkio", "Preferencias guardadas correctamente.");
+  }
+  function loadLogo(event, type){
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const data = reader.result;
+      if (type === "oxkio"){
+        if (state.user !== "admin"){ addMessage("oxkio", "Solo el administrador puede cambiar el logo de Oxkio."); return; }
+        state.oxLogo = data; localStorage.setItem("ox_logo", data);
+      } else if (type === "client") {
+        state.clientLogo = data; localStorage.setItem("ox_client_logo", data);
+      } else if (type === "realAvatar") {
+        state.avatarReal = data; localStorage.setItem("ox_avatar_real", data);
+      }
+      applyLogos();
+      cambiarAvatar();
+    };
+    reader.readAsDataURL(file);
+  }
+  function applyLogos(){
+    const oxTargets = [document.getElementById("topOxLogo"), document.getElementById("loginOxLogo")];
+    oxTargets.forEach(el => {
+      if (!el) return;
+      el.innerHTML = `<img src="oxkio_logo.png" alt="Oxkio"/>`;
+    });
+
+    const clientLogoWrap = document.getElementById("clientWallLogoWrap");
+    const clientLogo = document.getElementById("clientWallLogo");
+    const clientText = document.getElementById("clientWallText");
+    if (state.clientLogo){
+      clientLogo.src = state.clientLogo;
+      clientLogoWrap.classList.remove("hidden");
+      clientText.classList.add("hidden");
+      document.getElementById("avatarLogoImg").src = state.clientLogo;
+    } else {
+      clientLogoWrap.classList.add("hidden");
+      clientText.classList.remove("hidden");
+      document.getElementById("avatarLogoImg").removeAttribute("src");
+    }
+
+    if (state.avatarReal){ document.getElementById("avatarRealImg").src = state.avatarReal; }
+    else { document.getElementById("avatarRealImg").removeAttribute("src"); }
+  }
+  function cambiarAvatar(){
+    state.avatarMode = document.getElementById("avatarMode").value;
+    localStorage.setItem("ox_avatar_mode", state.avatarMode);
+    document.getElementById("avatarFicticio").classList.add("hidden");
+    document.getElementById("avatarLogoWrap").classList.add("hidden");
+    document.getElementById("avatarRealImg").classList.add("hidden");
+
+    if (state.avatarMode === "logo"){
+      document.getElementById("avatarLogoWrap").classList.remove("hidden");
+      if (!state.clientLogo){ addMessage("oxkio", "Modo avatar logo activo. Puedes subir un logo cliente para visualizarlo."); }
+    } else if (state.avatarMode === "real"){
+      document.getElementById("avatarRealImg").classList.remove("hidden");
+      if (!state.avatarReal){ addMessage("oxkio", "Modo avatar real activo. Puedes subir una imagen para usarla como avatar."); }
+    } else {
+      document.getElementById("avatarFicticio").classList.remove("hidden");
+    }
+  }
+  function quitarLogoCliente(){
+    state.clientLogo = "";
+    localStorage.removeItem("ox_client_logo");
+    applyLogos();
+    cambiarAvatar();
+    addMessage("oxkio", "Logo del cliente eliminado. Se muestra el nombre como fondo.");
+  }
+  function comprobarVoz(){
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const supportText = document.getElementById("supportText");
+    if (!SpeechRecognition){ supportText.textContent = "Este navegador no soporta reconocimiento de voz."; setStatus("Sin soporte de voz"); return; }
+    supportText.textContent = "Reconocimiento de voz detectado en este navegador."; setStatus("Voz disponible");
+  }
+  function hablarConOxkio(){
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition){ setStatus("Este navegador no soporta voz"); return; }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "es-ES"; recognition.interimResults = false; recognition.continuous = false; recognition.maxAlternatives = 1;
+    setStatus("Escuchando...");
+    document.getElementById("voiceBtn").textContent = "Escuchando...";
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript;
+      document.getElementById("inputText").value = text;
+      setStatus("Texto capturado");
+      document.getElementById("voiceBtn").textContent = "Hablar con Oxkio";
+    };
+    recognition.onerror = (event) => {
+      setStatus("Error de voz: " + event.error);
+      document.getElementById("voiceBtn").textContent = "Hablar con Oxkio";
+    };
+    recognition.onend = () => { document.getElementById("voiceBtn").textContent = "Hablar con Oxkio"; };
+    recognition.start();
+  }
+  function resetDemo(){ localStorage.removeItem("ox_messages"); state.messages = []; renderMessages(); renderProposal("Oxkio activo. Listo para organizar, proponer y ejecutar."); setStatus("Demo reiniciada"); }
+  (function init(){ const savedUser = localStorage.getItem("ox_user"); if (savedUser){ state.user = savedUser; showApp(); } })();
+</script>
+</body>
+</html>
