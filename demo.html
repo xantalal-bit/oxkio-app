@@ -3,7 +3,6 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Oxkio</title>
-
 <style>
 body{
   font-family:Arial;
@@ -12,95 +11,118 @@ body{
   margin:0;
   padding:20px;
 }
-
 .box{
-  max-width:600px;
+  max-width:700px;
   margin:auto;
 }
-
 input, textarea{
   width:100%;
   padding:10px;
   border-radius:10px;
   margin-top:10px;
+  box-sizing:border-box;
 }
-
 button{
   padding:10px 15px;
   margin-top:10px;
+  margin-right:8px;
   border:none;
   border-radius:8px;
   background:#2563eb;
   color:white;
 }
-
-.respuesta{
+.respuesta, .agendaBox{
   margin-top:20px;
   background:#111;
   padding:15px;
   border-radius:10px;
 }
+.item{
+  padding:10px 0;
+  border-bottom:1px solid #333;
+}
+h3{
+  margin-top:30px;
+}
 </style>
 </head>
-
 <body>
 
 <div class="box">
 
-<!-- LOGIN -->
 <div id="login">
-<h2>Acceso Oxkio</h2>
-
-<input id="user" placeholder="Usuario">
-<input id="pass" type="password" placeholder="Contraseña">
-
-<button onclick="login()">Entrar</button>
-<p id="error" style="color:red;"></p>
+  <h2>Acceso Oxkio</h2>
+  <input id="user" placeholder="Usuario">
+  <input id="pass" type="password" placeholder="Contraseña">
+  <button onclick="login()">Entrar</button>
+  <p id="error" style="color:red;"></p>
 </div>
 
-<!-- APP -->
 <div id="app" style="display:none;">
-<h2>Oxkio</h2>
-<p>Escribe tu petición</p>
+  <h2>Oxkio</h2>
+  <p>Escribe tu petición</p>
 
-<textarea id="input"></textarea>
-<button onclick="responder()">Enviar</button>
+  <textarea id="input"></textarea>
+  <button onclick="responder()">Enviar</button>
 
-<div id="out" class="respuesta"></div>
+  <div id="out" class="respuesta"></div>
+
+  <h3>Agenda y avisos</h3>
+
+  <input id="titulo" placeholder="Título: Ej. Renovar seguro coche">
+  <input id="fecha" placeholder="Fecha: Ej. 15/05/2026">
+  <input id="tipo" placeholder="Tipo: cita o aviso">
+
+  <button onclick="guardarAgenda()">Guardar</button>
+  <button onclick="verAgenda()">Ver agenda</button>
+
+  <div id="agenda" class="agendaBox"></div>
 </div>
 
 </div>
 
 <script>
 function login(){
-  let u=document.getElementById("user").value;
-  let p=document.getElementById("pass").value;
+  let u = document.getElementById("user").value;
+  let p = document.getElementById("pass").value;
 
-  if(u==="admin" && p==="admin123"){
-    document.getElementById("login").style.display="none";
-    document.getElementById("app").style.display="block";
+  if(u === "admin" && p === "admin123"){
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    verAgenda();
   }else{
-    document.getElementById("error").innerText="Acceso incorrecto";
+    document.getElementById("error").innerText = "Acceso incorrecto";
   }
 }
 
 function responder(){
-  let t=document.getElementById("input").value.toLowerCase();
-  let r="";
+  let t = document.getElementById("input").value.toLowerCase();
+  let r = "";
 
   if(t.includes("agenda") || t.includes("día")){
-    r="Resumen: organizar tu jornada\nPropuesta: crear agenda\nAcción: ¿Deseas que la prepare?";
+    r = "Resumen: organizar tu jornada\nPropuesta: revisar citas y avisos\nAcción: utiliza el bloque de agenda para guardar o consultar.";
   }
   else if(t.includes("correo")){
-    r="Resumen: gestión de correos\nPropuesta: clasificar y responder\nAcción: ¿Deseas que redacte?";
+    r = "Resumen: gestión de correos\nPropuesta: clasificar y responder\nAcción: ¿Deseas que redacte?";
+  }
+  else if(t.includes("renovar") || t.includes("seguro") || t.includes("médico") || t.includes("medico")){
+    r = "Resumen: has indicado un aviso importante\nPropuesta: guardarlo en agenda\nAcción: añade título, fecha y tipo en el bloque inferior.";
   }
   else{
-    r="Resumen: petición recibida\nPropuesta: analizar y estructurar\nAcción: ¿Deseas continuar?";
+    r = "Resumen: petición recibida\nPropuesta: analizar y estructurar\nAcción: ¿Deseas continuar?";
   }
 
-  document.getElementById("out").innerText="Oxkio:\n\n"+r;
+  document.getElementById("out").innerText = "Oxkio:\n\n" + r;
 }
-</script>
 
-</body>
-</html>
+function guardarAgenda(){
+  let titulo = document.getElementById("titulo").value;
+  let fecha = document.getElementById("fecha").value;
+  let tipo = document.getElementById("tipo").value;
+
+  if(!titulo || !fecha || !tipo){
+    document.getElementById("agenda").innerHTML = "Completa título, fecha y tipo.";
+    return;
+  }
+
+  let agenda = JSON.parse(localStorage.getItem("oxkio_agenda") || "[]");
