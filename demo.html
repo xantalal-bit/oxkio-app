@@ -2,27 +2,64 @@
 <html lang="es">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Oxkio App</title>
+<title>Oxkio</title>
+
 <style>
-body{font-family:Arial;background:#020617;color:white;margin:0;padding:20px}
-.box{max-width:600px;margin:auto}
-textarea{width:100%;height:100px;border-radius:10px;padding:10px}
-button{padding:10px 15px;margin-top:10px;border:none;border-radius:8px;background:#2563eb;color:white}
-.respuesta{margin-top:20px;background:#111;padding:15px;border-radius:10px}
+body{
+  font-family:Arial;
+  background:#020617;
+  color:white;
+  margin:0;
+  padding:20px;
+}
+
+.box{
+  max-width:600px;
+  margin:auto;
+}
+
+input, textarea{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  margin-top:10px;
+}
+
+button{
+  padding:10px 15px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:#2563eb;
+  color:white;
+}
+
+.respuesta{
+  margin-top:20px;
+  background:#111;
+  padding:15px;
+  border-radius:10px;
+}
 </style>
 </head>
+
 <body>
+
 <div class="box">
 
+<!-- LOGIN -->
 <div id="login">
-<h3>Acceso Oxkio</h3>
-<input id="user" placeholder="Usuario"><br><br>
-<input id="pass" type="password" placeholder="Contraseña"><br><br>
+<h2>Acceso Oxkio</h2>
+
+<input id="user" placeholder="Usuario">
+<input id="pass" type="password" placeholder="Contraseña">
+
 <button onclick="login()">Entrar</button>
 <p id="error" style="color:red;"></p>
 </div>
-<div id="app" style="display:none;">
 
+<!-- APP -->
+<div id="app" style="display:none;">
 <h2>Oxkio</h2>
 <p>Escribe tu petición</p>
 
@@ -30,43 +67,8 @@ button{padding:10px 15px;margin-top:10px;border:none;border-radius:8px;backgroun
 <button onclick="responder()">Enviar</button>
 
 <div id="out" class="respuesta"></div>
-
 </div>
 
-<textarea id="input"></textarea>
-<button onclick="responder()">Enviar</button>
-
-<div id="out" class="respuesta"></div>
-</div>
-
-<script>
-function responder(){
-  let t=document.getElementById("input").value.toLowerCase();
-
-  let r="";
-
-  if(t.includes("día") || t.includes("agenda")){
-    r="Resumen: organizar tu jornada\nPropuesta: priorizar tareas y citas\nAcción: ¿Quieres que cree tu agenda?";
-  }
-  else if(t.includes("correo") || t.includes("email")){
-    r="Resumen: gestión de correos\nPropuesta: clasificar y responder\nAcción: ¿Quieres que redacte respuesta?";
-  }
-  else if(t.includes("proceso") || t.includes("automat")){
-    r="Resumen: optimización de proceso\nPropuesta: automatizar tareas repetitivas\nAcción: ¿Quieres propuesta concreta?";
-  }
-  else{
-    r="Resumen: petición recibida\nPropuesta: analizar y estructurar\nAcción: ¿Deseas continuar?";
-  }
-
-  document.getElementById("out").innerText="Oxkio:\n\n"+r;
-}
-let t=document.getElementById("input").value;
-document.getElementById("out").innerText=
-"Oxkio:\n\nResumen: petición recibida\nPropuesta: organizar y ejecutar\nAcción: ¿Deseas continuar?";
-}
-</script>
-</body>
-</html>
 </div>
 
 <script>
@@ -81,4 +83,24 @@ function login(){
     document.getElementById("error").innerText="Acceso incorrecto";
   }
 }
+
+function responder(){
+  let t=document.getElementById("input").value.toLowerCase();
+  let r="";
+
+  if(t.includes("agenda") || t.includes("día")){
+    r="Resumen: organizar tu jornada\nPropuesta: crear agenda\nAcción: ¿Deseas que la prepare?";
+  }
+  else if(t.includes("correo")){
+    r="Resumen: gestión de correos\nPropuesta: clasificar y responder\nAcción: ¿Deseas que redacte?";
+  }
+  else{
+    r="Resumen: petición recibida\nPropuesta: analizar y estructurar\nAcción: ¿Deseas continuar?";
+  }
+
+  document.getElementById("out").innerText="Oxkio:\n\n"+r;
+}
 </script>
+
+</body>
+</html>
