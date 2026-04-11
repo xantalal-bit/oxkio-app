@@ -1,1 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oxkio Real</title>
+  <style>
+    body{margin:0;padding:20px;background:#020617;color:white;font-family:Arial,sans-serif}
+    .box{max-width:700px;margin:auto}
+    .logo{width:70px;height:70px;border-radius:14px;background:#111827;display:flex;align-items:center;justify-content:center;margin-bottom:16px;overflow:hidden;border:1px solid #334155}
+    .logo img{width:100%;height:100%;object-fit:contain}
+    input{width:100%;box-sizing:border-box;padding:12px;margin-top:10px;border-radius:10px;border:1px solid #475569;font-size:16px}
+    button{margin-top:10px;margin-right:8px;padding:10px 16px;border:none;border-radius:10px;background:#2563eb;color:white;font-size:16px}
+    .card{margin-top:20px;background:#111827;padding:16px;border-radius:12px}
+    .danger{background:#991b1b}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">
+      <img src="logo.PNG" alt="Logo Oxkio">
+    </div>
 
+    <h1>Oxkio Real</h1>
+    <p>Acceso real con email y contraseña</p>
+
+    <div id="loginBox" class="card">
+      <h2>Acceso</h2>
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Contraseña">
+      <button onclick="registrar()">Registrarme</button>
+      <button onclick="entrar()">Entrar</button>
+      <p id="msg"></p>
+    </div>
+
+    <div id="appBox" class="card" style="display:none;">
+      <h2>Sesión iniciada</h2>
+      <p>Usuario: <b id="usuarioActivo"></b></p>
+      <button class="danger" onclick="salir()">Salir</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "PEGA_AQUI",
+      authDomain: "PEGA_AQUI",
+      projectId: "PEGA_AQUI",
+      storageBucket: "PEGA_AQUI",
+      messagingSenderId: "PEGA_AQUI",
+      appId: "PEGA_AQUI"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const loginBox = document.getElementById("loginBox");
+    const appBox = document.getElementById("appBox");
+    const usuarioActivo = document.getElementById("usuarioActivo");
+    const msg = document.getElementById("msg");
+
+    window.registrar = async function () {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        msg.innerText = "Escribe email y contraseña.";
+        return;
+      }
+
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        msg.innerText = "Usuario registrado.";
+      } catch (e) {
+        msg.innerText = "Error al registrar.";
+      }
+    };
+
+    window.entrar = async function () {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        msg.innerText = "Escribe email y contraseña.";
+        return;
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        msg.innerText = "";
+      } catch (e) {
+        msg.innerText = "Error al entrar.";
+      }
+    };
+
+    window.salir = async function () {
+      await signOut(auth);
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loginBox.style.display = "none";
+        appBox.style.display = "block";
+        usuarioActivo.innerText = user.email;
+      } else {
+        appBox.style.display = "none";
+        loginBox.style.display = "block";
+        usuarioActivo.innerText = "";
+      }
+    });
+  </script>
+</body>
+</html>
