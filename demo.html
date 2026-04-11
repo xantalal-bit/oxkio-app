@@ -68,7 +68,16 @@ h3{
   <div id="out" class="respuesta"></div>
 
   <h3>Agenda y avisos</h3>
+<h3>Documentos</h3>
 
+<input id="docNombre" placeholder="Nombre documento: DNI, Seguro coche...">
+<input id="docTipo" placeholder="Tipo: personal, empresa...">
+<input id="docNota" placeholder="Nota: renovación, importante...">
+
+<button onclick="guardarDoc()">Guardar documento</button>
+<button onclick="verDocs()">Ver documentos</button>
+
+<div id="docs" class="agendaBox"></div>
   <input id="titulo" placeholder="Título: Ej. Renovar seguro coche">
   <input id="fecha" placeholder="Fecha: Ej. 15/05/2026">
   <input id="tipo" placeholder="Tipo: cita o aviso">
