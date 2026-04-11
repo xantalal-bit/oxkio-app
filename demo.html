@@ -158,4 +158,39 @@ function verAgenda(){
 
   document.getElementById("agenda").innerHTML = html;
 }
+  function guardarDoc(){
+  let nombre = document.getElementById("docNombre").value;
+  let tipo = document.getElementById("docTipo").value;
+  let nota = document.getElementById("docNota").value;
+
+  if(!nombre){
+    document.getElementById("docs").innerHTML = "Añade al menos nombre.";
+    return;
+  }
+
+  let docs = JSON.parse(localStorage.getItem("oxkio_docs") || "[]");
+  docs.push({ nombre, tipo, nota });
+  localStorage.setItem("oxkio_docs", JSON.stringify(docs));
+
+  document.getElementById("docNombre").value="";
+  document.getElementById("docTipo").value="";
+  document.getElementById("docNota").value="";
+
+  verDocs();
+}
+
+function verDocs(){
+  let docs = JSON.parse(localStorage.getItem("oxkio_docs") || "[]");
+  let html = "<b>Documentos guardados</b><br><br>";
+
+  if(docs.length===0){
+    html += "No hay documentos.";
+  } else {
+    docs.forEach((d,i)=>{
+      html += `<div class="item"><b>${i+1}. ${d.nombre}</b><br>Tipo: ${d.tipo}<br>Nota: ${d.nota}</div>`;
+    });
+  }
+
+  document.getElementById("docs").innerHTML = html;
+}
 </script>
