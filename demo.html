@@ -193,4 +193,20 @@ function verDocs(){
 
   document.getElementById("docs").innerHTML = html;
 }
+  function revisarAlertas(){
+  let agenda = JSON.parse(localStorage.getItem("oxkio_agenda") || "[]");
+  let hoy = new Date();
+
+  agenda.forEach(item=>{
+    let fecha = new Date(item.fecha);
+
+    let diferencia = (fecha - hoy) / (1000*60*60*24);
+
+    if(diferencia <= 7 && diferencia >= 0){
+      alert("⚠️ Aviso próximo: " + item.titulo + " el " + item.fecha);
+    }
+  });
+}
+
+setInterval(revisarAlertas, 10000);
 </script>
