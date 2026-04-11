@@ -40,6 +40,25 @@ button{padding:10px 15px;margin-top:10px;border:none;border-radius:8px;backgroun
 
 <script>
 function responder(){
+  let t=document.getElementById("input").value.toLowerCase();
+
+  let r="";
+
+  if(t.includes("día") || t.includes("agenda")){
+    r="Resumen: organizar tu jornada\nPropuesta: priorizar tareas y citas\nAcción: ¿Quieres que cree tu agenda?";
+  }
+  else if(t.includes("correo") || t.includes("email")){
+    r="Resumen: gestión de correos\nPropuesta: clasificar y responder\nAcción: ¿Quieres que redacte respuesta?";
+  }
+  else if(t.includes("proceso") || t.includes("automat")){
+    r="Resumen: optimización de proceso\nPropuesta: automatizar tareas repetitivas\nAcción: ¿Quieres propuesta concreta?";
+  }
+  else{
+    r="Resumen: petición recibida\nPropuesta: analizar y estructurar\nAcción: ¿Deseas continuar?";
+  }
+
+  document.getElementById("out").innerText="Oxkio:\n\n"+r;
+}
 let t=document.getElementById("input").value;
 document.getElementById("out").innerText=
 "Oxkio:\n\nResumen: petición recibida\nPropuesta: organizar y ejecutar\nAcción: ¿Deseas continuar?";
