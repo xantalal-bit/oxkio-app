@@ -173,6 +173,17 @@ function verAgenda(){
       font-family: Arial, sans-serif;
       background:#020617;
       color:white;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <title>Oxkio App</title>
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#020617;
+      color:white;
       margin:0;
       padding:20px;
     }
@@ -231,4 +242,312 @@ function verAgenda(){
       background:#111827;
       padding:10px 14px;
       border-radius:10px;
-      color:#c
+      color:#cbd5e1;
+    }
+
+    input, textarea{
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      margin-top:10px;
+      box-sizing:border-box;
+      border:1px solid #475569;
+      font-size:16px;
+    }
+
+    textarea{
+      min-height:110px;
+      resize:vertical;
+    }
+
+    button{
+      padding:10px 16px;
+      margin-top:10px;
+      margin-right:8px;
+      border:none;
+      border-radius:10px;
+      background:#2563eb;
+      color:white;
+      font-size:16px;
+      cursor:pointer;
+    }
+
+    .secondary{
+      background:#334155;
+    }
+
+    .danger{
+      background:#991b1b;
+    }
+
+    .card{
+      margin-top:20px;
+      background:#111827;
+      padding:16px;
+      border-radius:12px;
+    }
+
+    .item{
+      padding:10px 0;
+      border-bottom:1px solid #334155;
+    }
+
+    .item:last-child{
+      border-bottom:none;
+    }
+
+    h2, h3{
+      margin-top:0;
+    }
+
+    .muted{
+      color:#cbd5e1;
+    }
+
+    a{
+      color:#60a5fa;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+
+    <!-- LOGIN -->
+    <div id="login">
+      <div class="header">
+        <div class="logo">
+          <!-- CAMBIAR LUEGO POR TU LOGO REAL -->
+          <span style="font-size:28px;font-weight:bold;">O</span>
+        </div>
+        <div class="header-text">
+          <h1>Oxkio</h1>
+          <p>Acceso administrador y usuarios</p>
+        </div>
+      </div>
+
+      <h2>Acceso Oxkio</h2>
+      <input id="user" placeholder="Usuario" />
+      <input id="pass" type="password" placeholder="Contraseña" />
+      <button onclick="login()">Entrar</button>
+      <p id="error" style="color:#f87171;"></p>
+    </div>
+
+    <!-- APP -->
+    <div id="app" style="display:none;">
+      <div class="topbar">
+        <div class="header">
+          <div class="logo">
+            <!-- CAMBIAR LUEGO POR TU LOGO REAL -->
+            <span style="font-size:28px;font-weight:bold;">O</span>
+          </div>
+          <div class="header-text">
+            <h1>Oxkio</h1>
+            <p>Tu agente ejecutivo</p>
+          </div>
+        </div>
+
+        <div>
+          <div class="userbox">
+            Usuario: <b id="usuarioActivo"></b> | Rol: <b id="rolActivo"></b>
+          </div>
+          <button class="danger" onclick="logout()">Salir</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Petición a Oxkio</h2>
+        <p class="muted">Escribe tu petición personal o profesional.</p>
+        <textarea id="input"></textarea>
+        <button onclick="responder()">Enviar</button>
+        <div id="out" class="card" style="margin-top:14px;"></div>
+      </div>
+
+      <div class="card">
+        <h3>Agenda y avisos</h3>
+        <input id="titulo" placeholder="Título: Ej. Renovar DNI" />
+        <input id="fecha" placeholder="Fecha: Ej. 15/06/2026" />
+        <input id="tipo" placeholder="Tipo: cita o aviso" />
+        <button onclick="guardarAgenda()">Guardar</button>
+        <button class="secondary" onclick="verAgenda()">Ver agenda</button>
+        <div id="agenda" class="card" style="margin-top:14px;"></div>
+      </div>
+
+      <div class="card">
+        <h3>Documentos</h3>
+        <input id="docNombre" placeholder="Nombre documento: DNI, seguro coche..." />
+        <input id="docTipo" placeholder="Tipo: personal, profesional..." />
+        <input id="docNota" placeholder="Nota: renovación, importante..." />
+        <input id="docLink" placeholder="Enlace Google Drive" />
+        <button onclick="guardarDoc()">Guardar documento</button>
+        <button class="secondary" onclick="verDocs()">Ver documentos</button>
+        <div id="docs" class="card" style="margin-top:14px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function login(){
+      let u = document.getElementById("user").value.trim();
+      let p = document.getElementById("pass").value.trim();
+      let rol = "";
+
+      if(u === "admin" && p === "admin123"){
+        rol = "admin";
+      }
+      else if(u === "user" && p === "1234"){
+        rol = "user";
+      }
+      else{
+        document.getElementById("error").innerText = "Acceso incorrecto";
+        return;
+      }
+
+      localStorage.setItem("oxkio_user", u);
+      localStorage.setItem("oxkio_rol", rol);
+
+      document.getElementById("usuarioActivo").innerText = u;
+      document.getElementById("rolActivo").innerText = rol;
+
+      document.getElementById("login").style.display = "none";
+      document.getElementById("app").style.display = "block";
+
+      verAgenda();
+      verDocs();
+    }
+
+    function logout(){
+      localStorage.removeItem("oxkio_user");
+      localStorage.removeItem("oxkio_rol");
+      document.getElementById("app").style.display = "none";
+      document.getElementById("login").style.display = "block";
+      document.getElementById("error").innerText = "";
+      document.getElementById("user").value = "";
+      document.getElementById("pass").value = "";
+    }
+
+    function responder(){
+      let t = document.getElementById("input").value.toLowerCase();
+      let r = "";
+
+      if(t.includes("agenda") || t.includes("día") || t.includes("dia")){
+        r = "Resumen: organizar tu jornada\\nPropuesta: revisar citas y avisos\\nAcción: usa el bloque de agenda para guardar o consultar.";
+      }
+      else if(t.includes("correo") || t.includes("email")){
+        r = "Resumen: gestión de correos\\nPropuesta: clasificar y responder\\nAcción: siguiente fase, conectar Gmail.";
+      }
+      else if(t.includes("renovar") || t.includes("seguro") || t.includes("médico") || t.includes("medico") || t.includes("dni")){
+        r = "Resumen: has indicado un aviso importante\\nPropuesta: guardarlo en agenda y documentos\\nAcción: añade título, fecha y tipo debajo.";
+      }
+      else if(t.includes("cliente") || t.includes("ventas") || t.includes("erp")){
+        r = "Resumen: petición comercial detectada\\nPropuesta: preparar flujo de ventas y búsqueda automática\\nAcción: siguiente fase, conectar CRM y correo.";
+      }
+      else{
+        r = "Resumen: petición recibida\\nPropuesta: analizar y estructurar\\nAcción: ¿Deseas continuar?";
+      }
+
+      document.getElementById("out").innerText = "Oxkio:\\n\\n" + r;
+    }
+
+    function guardarAgenda(){
+      let titulo = document.getElementById("titulo").value.trim();
+      let fecha = document.getElementById("fecha").value.trim();
+      let tipo = document.getElementById("tipo").value.trim();
+
+      if(!titulo || !fecha || !tipo){
+        document.getElementById("agenda").innerHTML = "Completa título, fecha y tipo.";
+        return;
+      }
+
+      let usuario = localStorage.getItem("oxkio_user");
+      let claveAgenda = "oxkio_agenda_" + usuario;
+
+      let agenda = JSON.parse(localStorage.getItem(claveAgenda) || "[]");
+      agenda.push({ titulo, fecha, tipo });
+      localStorage.setItem(claveAgenda, JSON.stringify(agenda));
+
+      document.getElementById("titulo").value = "";
+      document.getElementById("fecha").value = "";
+      document.getElementById("tipo").value = "";
+
+      verAgenda();
+    }
+
+    function verAgenda(){
+      let usuario = localStorage.getItem("oxkio_user");
+      let claveAgenda = "oxkio_agenda_" + usuario;
+      let agenda = JSON.parse(localStorage.getItem(claveAgenda) || "[]");
+
+      let html = "<b>Elementos guardados</b><br><br>";
+
+      if(agenda.length === 0){
+        html += "No hay citas ni avisos todavía.";
+      } else {
+        agenda.forEach((item, i) => {
+          html += `<div class="item"><b>${i+1}. ${item.titulo}</b><br>Fecha: ${item.fecha}<br>Tipo: ${item.tipo}</div>`;
+        });
+      }
+
+      document.getElementById("agenda").innerHTML = html;
+    }
+
+    function guardarDoc(){
+      let nombre = document.getElementById("docNombre").value.trim();
+      let tipo = document.getElementById("docTipo").value.trim();
+      let nota = document.getElementById("docNota").value.trim();
+      let link = document.getElementById("docLink").value.trim();
+
+      if(!nombre){
+        document.getElementById("docs").innerHTML = "Añade al menos nombre.";
+        return;
+      }
+
+      let usuario = localStorage.getItem("oxkio_user");
+      let claveDocs = "oxkio_docs_" + usuario;
+
+      let docs = JSON.parse(localStorage.getItem(claveDocs) || "[]");
+      docs.push({ nombre, tipo, nota, link });
+      localStorage.setItem(claveDocs, JSON.stringify(docs));
+
+      document.getElementById("docNombre").value = "";
+      document.getElementById("docTipo").value = "";
+      document.getElementById("docNota").value = "";
+      document.getElementById("docLink").value = "";
+
+      verDocs();
+    }
+
+    function verDocs(){
+      let usuario = localStorage.getItem("oxkio_user");
+      let claveDocs = "oxkio_docs_" + usuario;
+      let docs = JSON.parse(localStorage.getItem(claveDocs) || "[]");
+
+      let html = "<b>Documentos guardados</b><br><br>";
+
+      if(docs.length === 0){
+        html += "No hay documentos.";
+      } else {
+        docs.forEach((d, i) => {
+          html += `<div class="item"><b>${i+1}. ${d.nombre}</b><br>Tipo: ${d.tipo}<br>Nota: ${d.nota}<br>${d.link ? `<a href="${d.link}" target="_blank">Abrir documento</a>` : ""}</div>`;
+        });
+      }
+
+      document.getElementById("docs").innerHTML = html;
+    }
+
+    // Mantener sesión si ya había usuario logueado en este navegador
+    window.onload = function(){
+      let usuario = localStorage.getItem("oxkio_user");
+      let rol = localStorage.getItem("oxkio_rol");
+
+      if(usuario && rol){
+        document.getElementById("usuarioActivo").innerText = usuario;
+        document.getElementById("rolActivo").innerText = rol;
+        document.getElementById("login").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        verAgenda();
+        verDocs();
+      }
+    }
+  </script>
+</body>
+</html>
