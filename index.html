@@ -1,1 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oxkio</title>
 
+<style>
+body{
+    margin:0;
+    padding:20px;
+    background:#020617;
+    color:white;
+    font-family:Arial;
+}
+
+.box{
+    background:#0f172a;
+    padding:20px;
+    border-radius:15px;
+    margin-top:20px;
+}
+
+input, textarea{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border-radius:10px;
+    border:none;
+}
+
+button{
+    margin-top:10px;
+    padding:10px 15px;
+    border:none;
+    border-radius:10px;
+    background:#2563eb;
+    color:white;
+    font-weight:bold;
+}
+
+.red{
+    background:red;
+}
+
+.logo{
+    width:80px;
+    border-radius:15px;
+}
+</style>
+</head>
+
+<body>
+
+<img src="logo.PNG" class="logo">
+
+<h1>Oxkio</h1>
+
+<div id="login">
+    <h3>Acceso</h3>
+    <input id="user" placeholder="Escribe tu nombre">
+    <button onclick="login()">Entrar</button>
+</div>
+
+<div id="app" style="display:none;">
+    <p>Usuario activo: <b id="userName"></b></p>
+    <button class="red" onclick="logout()">Salir</button>
+
+    <div class="box">
+        <h3>Agenda</h3>
+
+        <input id="titulo" placeholder="Título">
+        <input id="fecha" placeholder="Fecha">
+        <input id="tipo" placeholder="Tipo">
+
+        <button onclick="guardar()">Guardar</button>
+    </div>
+
+    <div class="box">
+        <h3>Elementos guardados</h3>
+        <div id="lista"></div>
+    </div>
+</div>
+
+<script>
+let usuario = localStorage.getItem("usuario");
+
+if(usuario){
+    entrarApp(usuario);
+}
+
+function login(){
+    let u = document.getElementById("user").value;
+    if(u===""){
+        alert("Escribe usuario");
+        return;
+    }
+    localStorage.setItem("usuario", u);
+    entrarApp(u);
+}
+
+function entrarApp(u){
+    document.getElementById("login").style.display="none";
+    document.getElementById("app").style.display="block";
+    document.getElementById("userName").innerText=u;
+    cargar();
+}
+
+function logout(){
+    localStorage.removeItem("usuario");
+    location.reload();
+}
+
+function guardar(){
+    let t = document.getElementById("titulo").value;
+    let f = document.getElementById("fecha").value;
+    let tp = document.getElementById("tipo").value;
+
+    let datos = JSON.parse(localStorage.getItem("agenda") || "[]");
+
+    datos.push({titulo:t,fecha:f,tipo:tp});
+
+    localStorage.setItem("agenda", JSON.stringify(datos));
+
+    cargar();
+}
+
+function cargar(){
+    let datos = JSON.parse(localStorage.getItem("agenda") || "[]");
+    let html="";
+
+    datos.forEach((d,i)=>{
+        html+=`<p><b>${i+1}. ${d.titulo}</b><br>${d.fecha}<br>${d.tipo}</p><hr>`;
+    });
+
+    document.getElementById("lista").innerHTML=html;
+}
+</script>
+
+</body>
+</html>
