@@ -237,62 +237,153 @@
 
       if (agenda.length === 0) {
         html += 'No hay citas ni avisos todavía.';
-      } else {
-        for (var i = 0; i < agenda.length; i++) {
-          html += '<div class="item"><b>' + (i + 1) + '. ' + agenda[i].titulo + '</b><br>Fecha: ' + agenda[i].fecha + '<br>Tipo: ' + agenda[i].tipo + '</div>';
-        }
-      }
+<script>
 
-      document.getElementById('agenda').innerHTML = html;
-    }
+function entrarAdmin() {
+  let usuario = prompt("Introduce usuario (admin o nombre):");
 
-    function guardarDoc() {
-      var nombre = document.getElementById('docNombre').value.trim();
-      var tipo = document.getElementById('docTipo').value.trim();
-      var nota = document.getElementById('docNota').value.trim();
-      var link = document.getElementById('docLink').value.trim();
+  if (!usuario) return;
 
-      if (!nombre) {
-        document.getElementById('docs').innerText = 'Añade al menos nombre.';
-        return;
-      }
+  localStorage.setItem("oxkio_user", usuario);
 
-      var docs = JSON.parse(localStorage.getItem('oxkio_docs') || '[]');
-      docs.push({ nombre: nombre, tipo: tipo, nota: nota, link: link });
-      localStorage.setItem('oxkio_docs', JSON.stringify(docs));
+  document.getElementById('loginBox').style.display = 'none';
+  document.getElementById('appBox').style.display = 'block';
 
-      document.getElementById('docNombre').value = '';
-      document.getElementById('docTipo').value = '';
-      document.getElementById('docNota').value = '';
-      document.getElementById('docLink').value = '';
+  document.querySelector(".userbox").innerHTML =
+    "Usuario activo: <b>" + usuario + "</b>";
 
-      verDocs();
-    }
+  verAgenda();
+  verDocs();
+}
 
-    function verDocs() {
-      var docs = JSON.parse(localStorage.getItem('oxkio_docs') || '[]');
-      var html = '<b>Documentos guardados</b><br><br>';
+function salir() {
+  localStorage.removeItem('oxkio_user');
+  document.getElementById('appBox').style.display = 'none';
+  document.getElementById('loginBox').style.display = 'block';
+}
 
-      if (docs.length === 0) {
-        html += 'No hay documentos.';
-      } else {
-        for (var i = 0; i < docs.length; i++) {
-          html += '<div class="item"><b>' + (i + 1) + '. ' + docs[i].nombre + '</b><br>Tipo: ' + docs[i].tipo + '<br>Nota: ' + docs[i].nota + '<br>' + (docs[i].link ? '<a href="' + docs[i].link + '" target="_blank">Abrir documento</a>' : '') + '</div>';
-        }
-      }
+function responder() {
+  var t = document.getElementById('input').value.toLowerCase();
+  var r = 'Resumen: petición recibida\\nPropuesta: analizar y estructurar\\nAcción: ¿Deseas continuar?';
 
-      document.getElementById('docs').innerHTML = html;
-    }
+  if (t.includes('agenda') || t.includes('día') || t.includes('dia')) {
+    r = 'Resumen: organizar tu jornada\\nPropuesta: revisar citas y avisos\\nAcción: usa la agenda inferior.';
+  } else if (t.includes('correo') || t.includes('email')) {
+    r = 'Resumen: gestión de correos\\nPropuesta: clasificar y responder\\nAcción: siguiente fase, conectar Gmail.';
+  } else if (t.includes('dni') || t.includes('seguro') || t.includes('renovar')) {
+    r = 'Resumen: aviso importante detectado\\nPropuesta: guardarlo en agenda y documentos\\nAcción: añade título, fecha y tipo abajo.';
+  } else if (t.includes('cliente') || t.includes('ventas') || t.includes('erp')) {
+    r = 'Resumen: petición comercial detectada\\nPropuesta: preparar flujo de ventas\\nAcción: siguiente fase, automatización.';
+  }
 
-    window.onload = function() {
-      var sesion = localStorage.getItem('oxkio_session');
-      if (sesion === 'admin') {
-        document.getElementById('loginBox').style.display = 'none';
-        document.getElementById('appBox').style.display = 'block';
-        verAgenda();
-        verDocs();
-      }
-    };
-  </script>
+  document.getElementById('out').innerText = 'Oxkio:\\n\\n' + r;
+}
+
+function guardarAgenda() {
+  var usuario = localStorage.getItem("oxkio_user") || "anon";
+  var clave = "oxkio_agenda_" + usuario;
+
+  var titulo = document.getElementById('titulo').value.trim();
+  var fecha = document.getElementById('fecha').value.trim();
+  var tipo = document.getElementById('tipo').value.trim();
+
+  if (!titulo || !fecha || !tipo) {
+    document.getElementById('agenda').innerText = 'Completa título, fecha y tipo.';
+    return;
+  }
+
+  var agenda = JSON.parse(localStorage.getItem(clave) || '[]');
+  agenda.push({ titulo, fecha, tipo });
+
+  localStorage.setItem(clave, JSON.stringify(agenda));
+
+  document.getElementById('titulo').value = '';
+  document.getElementById('fecha').value = '';
+  document.getElementById('tipo').value = '';
+
+  verAgenda();
+}
+
+function verAgenda() {
+  var usuario = localStorage.getItem("oxkio_user") || "anon";
+  var clave = "oxkio_agenda_" + usuario;
+
+  var agenda = JSON.parse(localStorage.getItem(clave) || '[]');
+
+  var html = "<b>Agenda de " + usuario + "</b><br><br>";
+
+  if (agenda.length === 0) {
+    html += "Sin elementos.";
+  } else {
+    agenda.forEach((item, i) => {
+      html += `<div class="item"><b>${i+1}. ${item.titulo}</b><br>Fecha: ${item.fecha}<br>Tipo: ${item.tipo}</div>`;
+    });
+  }
+
+  document.getElementById('agenda').innerHTML = html;
+}
+
+function guardarDoc() {
+  var usuario = localStorage.getItem("oxkio_user") || "anon";
+  var clave = "oxkio_docs_" + usuario;
+
+  var nombre = document.getElementById('docNombre').value.trim();
+  var tipo = document.getElementById('docTipo').value.trim();
+  var nota = document.getElementById('docNota').value.trim();
+  var link = document.getElementById('docLink').value.trim();
+
+  if (!nombre) {
+    document.getElementById('docs').innerText = 'Añade nombre.';
+    return;
+  }
+
+  var docs = JSON.parse(localStorage.getItem(clave) || '[]');
+  docs.push({ nombre, tipo, nota, link });
+
+  localStorage.setItem(clave, JSON.stringify(docs));
+
+  document.getElementById('docNombre').value = '';
+  document.getElementById('docTipo').value = '';
+  document.getElementById('docNota').value = '';
+  document.getElementById('docLink').value = '';
+
+  verDocs();
+}
+
+function verDocs() {
+  var usuario = localStorage.getItem("oxkio_user") || "anon";
+  var clave = "oxkio_docs_" + usuario;
+
+  var docs = JSON.parse(localStorage.getItem(clave) || '[]');
+
+  var html = "<b>Documentos de " + usuario + "</b><br><br>";
+
+  if (docs.length === 0) {
+    html += "Sin documentos.";
+  } else {
+    docs.forEach((d, i) => {
+      html += `<div class="item"><b>${i+1}. ${d.nombre}</b><br>Tipo: ${d.tipo}<br>Nota: ${d.nota}<br>${d.link ? `<a href="${d.link}" target="_blank">Abrir</a>` : ""}</div>`;
+    });
+  }
+
+  document.getElementById('docs').innerHTML = html;
+}
+
+window.onload = function() {
+  let usuario = localStorage.getItem("oxkio_user");
+
+  if (usuario) {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('appBox').style.display = 'block';
+
+    document.querySelector(".userbox").innerHTML =
+      "Usuario activo: <b>" + usuario + "</b>";
+
+    verAgenda();
+    verDocs();
+  }
+};
+
+</script>
 </body>
 </html>
