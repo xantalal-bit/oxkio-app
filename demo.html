@@ -113,7 +113,7 @@ function login(){
   document.getElementById("login").style.display="none";
   document.getElementById("app").style.display="block";
 }
-
+localStorage.setItem("oxkio_user", u);
 function responder(){
   let t = document.getElementById("input").value.toLowerCase();
   let r = "";
@@ -143,7 +143,8 @@ function guardarAgenda(){
     document.getElementById("agenda").innerHTML = "Completa título, fecha y tipo.";
     return;
   }
-
+let agenda = JSON.parse(localStorage.getItem("oxkio_agenda") || "[]");
+localStorage.setItem("oxkio_agenda", JSON.stringify(agenda));
   let agenda = JSON.parse(localStorage.getItem("oxkio_agenda") || "[]");
   agenda.push({ titulo, fecha, tipo });
   localStorage.setItem("oxkio_agenda", JSON.stringify(agenda));
