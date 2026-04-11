@@ -13,6 +13,16 @@ button{padding:10px 15px;margin-top:10px;border:none;border-radius:8px;backgroun
 </head>
 <body>
 <div class="box">
+
+<div id="login">
+<h3>Acceso Oxkio</h3>
+<input id="user" placeholder="Usuario"><br><br>
+<input id="pass" type="password" placeholder="Contraseña"><br><br>
+<button onclick="login()">Entrar</button>
+<p id="error" style="color:red;"></p>
+</div>
+
+<div id="app" style="display:none;">
 <h2>Oxkio</h2>
 <p>Escribe tu petición</p>
 
@@ -31,3 +41,18 @@ document.getElementById("out").innerText=
 </script>
 </body>
 </html>
+</div>
+
+<script>
+function login(){
+  let u=document.getElementById("user").value;
+  let p=document.getElementById("pass").value;
+
+  if(u==="admin" && p==="admin123"){
+    document.getElementById("login").style.display="none";
+    document.getElementById("app").style.display="block";
+  }else{
+    document.getElementById("error").innerText="Acceso incorrecto";
+  }
+}
+</script>
