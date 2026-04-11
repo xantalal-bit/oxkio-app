@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oxkio App</title>
+<style>
+body{font-family:Arial;background:#020617;color:white;margin:0;padding:20px}
+.box{max-width:600px;margin:auto}
+textarea{width:100%;height:100px;border-radius:10px;padding:10px}
+button{padding:10px 15px;margin-top:10px;border:none;border-radius:8px;background:#2563eb;color:white}
+.respuesta{margin-top:20px;background:#111;padding:15px;border-radius:10px}
+</style>
+</head>
+<body>
+<div class="box">
+<h2>Oxkio</h2>
+<p>Escribe tu petición</p>
+
+<textarea id="input"></textarea>
+<button onclick="responder()">Enviar</button>
+
+<div id="out" class="respuesta"></div>
+</div>
+
+<script>
+function responder(){
+let t=document.getElementById("input").value;
+document.getElementById("out").innerText=
+"Oxkio:\n\nResumen: petición recibida\nPropuesta: organizar y ejecutar\nAcción: ¿Deseas continuar?";
+}
+</script>
+</body>
+</html>
