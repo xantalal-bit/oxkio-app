@@ -162,63 +162,73 @@ function verAgenda(){
 
   if(agenda.length === 0){
     html += "No hay citas ni avisos todavía.";
-  } else {
-    agenda.forEach((item, i) => {
-      html += `<div class="item"><b>${i+1}. ${item.titulo}</b><br>Fecha: ${item.fecha}<br>Tipo: ${item.tipo}</div>`;
-    });
-  }
-
-  document.getElementById("agenda").innerHTML = html;
-}
-  function guardarDoc(){
-  let nombre = document.getElementById("docNombre").value;
-  let tipo = document.getElementById("docTipo").value;
-  let nota = document.getElementById("docNota").value;
-
-  if(!nombre){
-    document.getElementById("docs").innerHTML = "Añade al menos nombre.";
-    return;
-  }
-
-  let docs = JSON.parse(localStorage.getItem("oxkio_docs") || "[]");
-  docs.push({ nombre, tipo, nota });
-  localStorage.setItem("oxkio_docs", JSON.stringify(docs));
-
-  document.getElementById("docNombre").value="";
-  document.getElementById("docTipo").value="";
-  document.getElementById("docNota").value="";
-
-  verDocs();
-}
-
-function verDocs(){
-  let docs = JSON.parse(localStorage.getItem("oxkio_docs") || "[]");
-  let html = "<b>Documentos guardados</b><br><br>";
-
-  if(docs.length===0){
-    html += "No hay documentos.";
-  } else {
-    docs.forEach((d,i)=>{
-      html += `<div class="item"><b>${i+1}. ${d.nombre}</b><br>Tipo: ${d.tipo}<br>Nota: ${d.nota}</div>`;
-    });
-  }
-
-  document.getElementById("docs").innerHTML = html;
-}
-  function revisarAlertas(){
-  let agenda = JSON.parse(localStorage.getItem("oxkio_agenda") || "[]");
-  let hoy = new Date();
-
-  agenda.forEach(item=>{
-    let fecha = new Date(item.fecha);
-
-    let diferencia = (fecha - hoy) / (1000*60*60*24);
-
-    if(diferencia <= 7 && diferencia >= 0){
-      alert("⚠️ Aviso próximo: " + item.titulo + " el " + item.fecha);
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <title>Oxkio App</title>
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#020617;
+      color:white;
+      margin:0;
+      padding:20px;
     }
-  });
-}
 
-setInterval(revisarAlertas, 10000);
-</script>
+    .box{
+      max-width:700px;
+      margin:auto;
+    }
+
+    .header{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      margin-bottom:20px;
+    }
+
+    .logo{
+      width:64px;
+      height:64px;
+      border-radius:14px;
+      background:#111827;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      border:1px solid #334155;
+      flex-shrink:0;
+    }
+
+    .logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+    }
+
+    .header-text h1{
+      margin:0;
+      font-size:32px;
+    }
+
+    .header-text p{
+      margin:4px 0 0 0;
+      color:#cbd5e1;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:20px;
+      flex-wrap:wrap;
+    }
+
+    .userbox{
+      background:#111827;
+      padding:10px 14px;
+      border-radius:10px;
+      color:#c
