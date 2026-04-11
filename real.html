@@ -47,8 +47,9 @@
         <input id="fecha" placeholder="Fecha">
         <input id="tipo" placeholder="Tipo">
         <button onclick="guardarAgenda()">Guardar</button>
-        <button onclick="verAgenda()">Ver agenda</button>
-        <p id="agendaMsg" class="msg"></p>
+<button onclick="verAgenda()">Ver agenda</button>
+<button class="danger" onclick="borrarAgenda()">Borrar agenda</button>
+<p id="agendaMsg" class="msg"></p>
       </div>
 
       <div class="card">
@@ -68,13 +69,14 @@
       signOut
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
-      getFirestore,
-      collection,
-      addDoc,
-      getDocs,
-      query,
-      where
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
   apiKey: "AIzaSyDFySiO23mqJilJPUfE-dLv9Zbs9gcY_kg",
@@ -172,6 +174,31 @@
     };
 
     window.verAgenda = async function () {
+      window.borrarAgenda = async function () {
+  const user = auth.currentUser;
+
+  if (!user) {
+    agendaMsg.innerText = "Debes iniciar sesión.";
+    return;
+  }
+
+  const confirmar = confirm("¿Seguro que quieres borrar toda tu agenda?");
+  if (!confirmar) return;
+
+  try {
+    const q = query(collection(db, "agenda"), where("uid", "==", user.uid));
+    const snap = await getDocs(q);
+
+    for (const docSnap of snap.docs) {
+      await deleteDoc(docSnap.ref);
+    }
+
+    agendaMsg.innerText = "Agenda borrada.";
+    agendaLista.innerHTML = "";
+  } catch (e) {
+    agendaMsg.innerText = "Error al borrar agenda.";
+  }
+};
       const user = auth.currentUser;
 
       if (!user) {
