@@ -220,15 +220,26 @@
       document.getElementById('out').innerText = 'Oxkio:\\n\\n' + r;
     }
 
-    function guardarAgenda() {
-      var titulo = document.getElementById('titulo').value.trim();
-      var fecha = document.getElementById('fecha').value.trim();
-      var tipo = document.getElementById('tipo').value.trim();
+  async function guardarAgenda() {
+  const titulo = document.getElementById("titulo").value;
+  const fecha = document.getElementById("fecha").value;
+  const tipo = document.getElementById("tipo").value;
 
-      if (!titulo || !fecha || !tipo) {
-        document.getElementById('agenda').innerText = 'Completa título, fecha y tipo.';
-        return;
-      }
+  if (!titulo || !fecha || !tipo) {
+    alert("Completa todos los campos");
+    return;
+  }
+
+  await addDoc(collection(db, "agenda"), {
+    titulo: titulo,
+    fecha: fecha,
+    tipo: tipo,
+    usuario: localStorage.getItem("oxkio_user") || "admin",
+    fecha_creacion: new Date()
+  });
+
+  alert("Guardado en la nube ✅");
+}
 
       var agenda = JSON.parse(localStorage.getItem(claveAgenda()) || '[]');
       agenda.push({ titulo: titulo, fecha: fecha, tipo: tipo });
@@ -309,5 +320,27 @@
       }
     };
   </script>
+  <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDFySiO23mqJilJPUfE-dLv9Zbs9gcY_kg",
+    authDomain: "oxkio-9af40.firebaseapp.com",
+    projectId: "oxkio-9af40",
+    storageBucket: "oxkio-9af40.firebasestorage.app",
+    messagingSenderId: "975887789346",
+    appId: "1:975887789346:web:fa581107285b989d90897b"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+</script>
 </body>
 </html>
