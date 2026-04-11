@@ -56,23 +56,6 @@ h3{
   <input id="pass" type="password" placeholder="Contraseña">
   <button onclick="login()">Entrar</button>
   <p id="error" style="color:red;"></p>
-let rol = "";
-
-if(u==="admin" && p==="admin123"){
-  rol = "admin";
-}
-else if(u==="user" && p==="1234"){
-  rol = "user";
-}
-else{
-  document.getElementById("error").innerText="Acceso incorrecto";
-  return;
-}
-
-localStorage.setItem("oxkio_rol", rol);
-
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="block";
 </div>
 
 <div id="app" style="display:none;">
@@ -112,12 +95,23 @@ function login(){
   let u = document.getElementById("user").value.trim();
   let p = document.getElementById("pass").value.trim();
 
-  if(u === "admin" && p === "admin123"){
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-  } else {
-    document.getElementById("error").innerText = "Acceso incorrecto";
+  let rol = "";
+
+  if(u==="admin" && p==="admin123"){
+    rol = "admin";
   }
+  else if(u==="user" && p==="1234"){
+    rol = "user";
+  }
+  else{
+    document.getElementById("error").innerText="Acceso incorrecto";
+    return;
+  }
+
+  localStorage.setItem("oxkio_rol", rol);
+
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
 }
 
 function responder(){
