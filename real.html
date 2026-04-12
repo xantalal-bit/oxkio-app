@@ -1,1 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oxkio Real</title>
+  <style>
+    body{
+      margin:0;
+      padding:20px;
+      background:#020617;
+      color:white;
+      font-family:Arial,sans-serif;
+    }
+    .box{
+      max-width:720px;
+      margin:auto;
+    }
+    .logo{
+      width:78px;
+      height:78px;
+      border-radius:16px;
+      background:#111827;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:16px;
+      overflow:hidden;
+      border:1px solid #334155;
+    }
+    .logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+    }
+    h1,h2,h3{
+      margin-top:0;
+    }
+    p{
+      line-height:1.4;
+    }
+    input{
+      width:100%;
+      box-sizing:border-box;
+      padding:12px;
+      margin-top:10px;
+      border-radius:12px;
+      border:1px solid #475569;
+      font-size:16px;
+    }
+    button{
+      margin-top:10px;
+      margin-right:8px;
+      padding:10px 16px;
+      border:none;
+      border-radius:12px;
+      background:#2563eb;
+      color:white;
+      font-size:16px;
+      cursor:pointer;
+    }
+    .danger{
+      background:#991b1b;
+    }
+    .secondary{
+      background:#334155;
+    }
+    .card{
+      margin-top:20px;
+      background:#111827;
+      padding:18px;
+      border-radius:16px;
+    }
+    .item{
+      padding:12px 0;
+      border-bottom:1px solid #334155;
+    }
+    .item:last-child{
+      border-bottom:none;
+    }
+    .msg{
+      margin-top:10px;
+      color:#cbd5e1;
+    }
+    .muted{
+      color:#cbd5e1;
+    }
+    .pill{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      background:#1e293b;
+      color:#cbd5e1;
+      font-size:13px;
+      margin-top:6px;
+    }
+    .empty{
+      color:#94a3b8;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+    .userbox{
+      background:#0f172a;
+      padding:10px 14px;
+      border-radius:12px;
+      color:#cbd5e1;
+      margin-top:10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">
+      <img src="logo.PNG" alt="Logo Oxkio">
+    </div>
 
+    <h1>Oxkio Real</h1>
+    <p class="muted">Vista ejecutiva con agenda real en la nube</p>
+
+    <div id="loginBox" class="card">
+      <h2>Acceso</h2>
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Contraseña">
+      <button id="btnRegistrar">Registrarme</button>
+      <button id="btnEntrar">Entrar</button>
+      <p id="msg" class="msg"></p>
+    </div>
+
+    <div id="appBox" style="display:none;">
+      <div class="card">
+        <div class="topbar">
+          <div>
+            <h2>Sesión iniciada</h2>
+            <p class="userbox">Usuario: <b id="usuarioActivo"></b></p>
+          </div>
+          <div>
+            <button id="btnSalir" class="danger">Salir</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Nueva tarea o aviso</h2>
+        <input id="titulo" placeholder="Título">
+        <input id="fecha" placeholder="Fecha (DD/MM/AAAA)">
+        <input id="tipo" placeholder="Tipo">
+        <button id="btnGuardar">Guardar</button>
+        <p id="agendaMsg" class="msg"></p>
+      </div>
+
+      <div class="card">
+        <h2>Avisos de hoy</h2>
+        <div id="listaHoy" class="empty">No hay avisos para hoy.</div>
+      </div>
+
+      <div class="card">
+        <h2>Próximos avisos</h2>
+        <p class="muted">Mostrando eventos entre hoy y los próximos 7 días.</p>
+        <div id="listaProximos" class="empty">No hay avisos próximos.</div>
+      </div>
+
+      <div class="card">
+        <h2>Toda mi agenda</h2>
+        <div id="agendaLista"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      query,
+      where,
+      deleteDoc,
+      doc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyDFySiO23mqJilJPUfE-dLv9Zbs9gcY_kg",
+  authDomain: "oxkio-9af40.firebaseapp.com",
+  projectId: "oxkio-9af40",
+  storageBucket: "oxkio-9af40.firebasestorage.app",
+  messagingSenderId: "975887789346",
+  appId: "1:975887789346:web:fa581107285b989d90897b"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const loginBox = document.getElementById("loginBox");
+    const appBox = document.getElementById("appBox");
+    const usuarioActivo = document.getElementById("usuarioActivo");
+    const msg = document.getElementById("msg");
+    const agendaMsg = document.getElementById("agendaMsg");
+    const agendaLista = document.getElementById("agendaLista");
+    const listaHoy = document.getElementById("listaHoy");
+    const listaProximos = document.getElementById("listaProximos");
+
+    const inputEmail = document.getElementById("email");
+    const inputPassword = document.getElementById("password");
+    const inputTitulo = document.getElementById("titulo");
+    const inputFecha = document.getElementById("fecha");
+    const inputTipo = document.getElementById("tipo");
+
+    const btnRegistrar = document.getElementById("btnRegistrar");
+    const btnEntrar = document.getElementById("btnEntrar");
+    const btnSalir = document.getElementById("btnSalir");
+    const btnGuardar = document.getElementById("btnGuardar");
+
+    function parseFecha(fechaStr) {
+      if (!fechaStr) return null;
+      const partes = fechaStr.split("/");
+      if (partes.length !== 3) return null;
+
+      const dia = parseInt(partes[0], 10);
+      const mes = parseInt(partes[1], 10) - 1;
+      const anio = parseInt(partes[2], 10);
+
+      const fecha = new Date(anio, mes, dia);
+      if (
+        fecha.getFullYear() !== anio ||
+        fecha.getMonth() !== mes ||
+        fecha.getDate() !== dia
+      ) {
+        return null;
+      }
+
+      fecha.setHours(0, 0, 0, 0);
+      return fecha;
+    }
+
+    function formatoHoy() {
+      const hoy = new Date();
+      const d = String(hoy.getDate()).padStart(2, "0");
+      const m = String(hoy.getMonth() + 1).padStart(2, "0");
+      const y = hoy.getFullYear();
+      return `${d}/${m}/${y}`;
+    }
+
+    function diasHasta(fecha) {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const diff = fecha.getTime() - hoy.getTime();
+      return Math.round(diff / 86400000);
+    }
+
+    async function verAgenda() {
+      const user = auth.currentUser;
+
+      if (!user) {
+        agendaLista.innerHTML = "";
+        listaHoy.innerHTML = "No hay avisos para hoy.";
+        listaProximos.innerHTML = "No hay avisos próximos.";
+        return;
+      }
+
+      try {
+        const q = query(collection(db, "agenda"), where("uid", "==", user.uid));
+        const snap = await getDocs(q);
+
+        const items = [];
+
+        snap.forEach((docSnap) => {
+          const item = docSnap.data();
+          items.push({
+            id: docSnap.id,
+            titulo: item.titulo || "",
+            fecha: item.fecha || "",
+            tipo: item.tipo || "",
+            creadoEn: item.creadoEn || 0
+          });
+        });
+
+        items.sort((a, b) => {
+          const fa = parseFecha(a.fecha);
+          const fb = parseFecha(b.fecha);
+
+          if (fa && fb) return fa - fb;
+          if (fa) return -1;
+          if (fb) return 1;
+          return (a.creadoEn || 0) - (b.creadoEn || 0);
+        });
+
+        let htmlAgenda = "";
+        let htmlHoy = "";
+        let htmlProximos = "";
+
+        const hoyTexto = formatoHoy();
+
+        items.forEach((item, index) => {
+          const fechaObj = parseFecha(item.fecha);
+          const diff = fechaObj ? diasHasta(fechaObj) : null;
+
+          htmlAgenda += `
+            <div class="item">
+              <b>${index + 1}. ${item.titulo}</b><br>
+              Fecha: ${item.fecha}<br>
+              Tipo: ${item.tipo}<br>
+              <button data-id="${item.id}" class="btnEliminar danger">Eliminar</button>
+            </div>
+          `;
+
+          if (item.fecha === hoyTexto) {
+            htmlHoy += `
+              <div class="item">
+                <b>${item.titulo}</b><br>
+                Fecha: ${item.fecha}<br>
+                Tipo: ${item.tipo}
+                <div class="pill">Hoy</div>
+              </div>
+            `;
+          }
+
+          if (diff !== null && diff >= 0 && diff <= 7) {
+            htmlProximos += `
+              <div class="item">
+                <b>${item.titulo}</b><br>
+                Fecha: ${item.fecha}<br>
+                Tipo: ${item.tipo}<br>
+                <div class="pill">En ${diff} día(s)</div>
+              </div>
+            `;
+          }
+        });
+
+        agendaLista.innerHTML = htmlAgenda || "<p class='empty'>No hay elementos todavía.</p>";
+        listaHoy.innerHTML = htmlHoy || "<p class='empty'>No hay avisos para hoy.</p>";
+        listaProximos.innerHTML = htmlProximos || "<p class='empty'>No hay avisos próximos.</p>";
+
+        document.querySelectorAll(".btnEliminar").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const id = btn.getAttribute("data-id");
+            await deleteDoc(doc(db, "agenda", id));
+            await verAgenda();
+          });
+        });
+      } catch (e) {
+        agendaMsg.innerText = "Error al leer agenda.";
+      }
+    }
+
+    btnRegistrar.addEventListener("click", async () => {
+      const email = inputEmail.value.trim();
+      const password = inputPassword.value.trim();
+
+      if (!email || !password) {
+        msg.innerText = "Escribe email y contraseña.";
+        return;
+      }
+
+      if (password.length < 6) {
+        msg.innerText = "La contraseña debe tener al menos 6 caracteres.";
+        return;
+      }
+
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        msg.innerText = "Usuario registrado.";
+      } catch (e) {
+        msg.innerText = e.message || "Error al registrar.";
+      }
+    });
+
+    btnEntrar.addEventListener("click", async () => {
+      const email = inputEmail.value.trim();
+      const password = inputPassword.value.trim();
+
+      if (!email || !password) {
+        msg.innerText = "Escribe email y contraseña.";
+        return;
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        msg.innerText = "";
+      } catch (e) {
+        msg.innerText = e.message || "Error al entrar.";
+      }
+    });
+
+    btnSalir.addEventListener("click", async () => {
+      await signOut(auth);
+    });
+
+    btnGuardar.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      const titulo = inputTitulo.value.trim();
+      const fecha = inputFecha.value.trim();
+      const tipo = inputTipo.value.trim();
+
+      if (!user) {
+        agendaMsg.innerText = "Debes iniciar sesión.";
+        return;
+      }
+
+      if (!titulo || !fecha || !tipo) {
+        agendaMsg.innerText = "Completa título, fecha y tipo.";
+        return;
+      }
+
+      if (!parseFecha(fecha)) {
+        agendaMsg.innerText = "Usa formato de fecha DD/MM/AAAA.";
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "agenda"), {
+          uid: user.uid,
+          email: user.email,
+          titulo,
+          fecha,
+          tipo,
+          creadoEn: Date.now()
+        });
+
+        inputTitulo.value = "";
+        inputFecha.value = "";
+        inputTipo.value = "";
+
+        agendaMsg.innerText = "Guardado en la nube.";
+        await verAgenda();
+      } catch (e) {
+        agendaMsg.innerText = e.message || "Error al guardar.";
+      }
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        loginBox.style.display = "none";
+        appBox.style.display = "block";
+        usuarioActivo.innerText = user.email;
+        await verAgenda();
+      } else {
+        appBox.style.display = "none";
+        loginBox.style.display = "block";
+        usuarioActivo.innerText = "";
+        agendaLista.innerHTML = "";
+        listaHoy.innerHTML = "No hay avisos para hoy.";
+        listaProximos.innerHTML = "No hay avisos próximos.";
+      }
+    });
+  </script>
+</body>
+</html>
