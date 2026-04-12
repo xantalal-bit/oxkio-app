@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oxkio</title>
+
+<style>
+body{background:#020617;color:white;font-family:Arial;padding:20px}
+.box{max-width:700px;margin:auto}
+input{width:100%;padding:12px;margin-top:10px;border-radius:12px;border:1px solid #444}
+button{margin-top:10px;padding:12px;border:none;border-radius:12px;background:#2563eb;color:white}
+.card{margin-top:20px;background:#111827;padding:15px;border-radius:12px}
+.item{padding:10px;border-bottom:1px solid #333}
+.tachado{text-decoration:line-through;opacity:0.5}
+.logo{width:70px;height:70px;margin-bottom:10px}
+</style>
+
+</head>
+<body>
+
+<div class="box">
+
+<img class="logo" src="https://via.placeholder.com/70">
+
+<h1>Oxkio</h1>
+
+<div id="login">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Contraseña">
+<button onclick="login()">Entrar</button>
+<button onclick="register()">Registrarme</button>
+</div>
+
+<div id="app" style="display:none">
+
+<p><b id="user"></b></p>
+<button onclick="logout()">Salir</button>
+
+<div class="card">
+<input id="titulo" placeholder="Título">
+<input id="fecha" placeholder="DD/MM/AAAA">
+<input id="tipo" placeholder="Tipo">
+<button onclick="save()">Guardar</button>
+</div>
+
+<div class="card">
+<h3>Hoy</h3>
+<div id="hoy"></div>
+</div>
+
+<div class="card">
+<h3>Próximos días</h3>
+<div id="semana"></div>
+</div>
+
+<div class="card">
+<h3>Agenda completa</h3>
+<div id="total"></div>
+</div>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDFySiO23mqJilJPUfE-dLv9Zbs9gcY_kg",
+  authDomain: "oxkio-9af40.firebaseapp.com",
+  projectId: "oxkio-9af40",
+  storageBucket: "oxkio-9af40.firebasestorage.app",
+  messagingSenderId: "975887789346",
+  appId: "1:975887789346:web:fa581107285b989d90897b"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+function parseFecha(f){
+let p=f.split("/");
+return new Date(p[2],p[1]-1,p[0]);
+}
+
+function hoyStr(){
+let h=new Date();
+return `${String(h.getDate()).padStart(2,"0")}/${String(h.getMonth()+1).padStart(2,"0")}/${h.getFullYear()}`;
+}
+
+function dias(f){
+let h=new Date();h.setHours(0,0,0,0);
+return Math.round((f-h)/86400000);
+}
+
+async function load(){
+
+let user=auth.currentUser;
+if(!user)return;
+
+let snap=await getDocs(query(collection(db,"agenda"),where("uid","==",user.uid)));
+
+let hoyHTML="";
+let semanaHTML="";
+let totalHTML="";
+
+snap.forEach(d=>{
+let i=d.data();
+let fecha=parseFecha(i.fecha);
+let diff=dias(fecha);
+
+let tachado = i.estado==="realizado" ? "tachado" : "";
+
+// AGENDA COMPLETA
+totalHTML+=`
+<div class="item">
+<b class="${tachado}">${i.titulo}</b><br>
+${i.fecha} - ${i.tipo}<br>
+${i.estado==="realizado"
+? "✔ Realizado"
+: `<button onclick="done('${d.id}')">Hecho</button>`}
+</div>`;
+
+// SOLO PENDIENTES EN VISTA EJECUTIVA
+if(i.estado==="realizado") return;
+
+if(i.fecha===hoyStr()){
+hoyHTML+=`
+<div class="item">
+<b>${i.titulo}</b><br>
+<button onclick="done('${d.id}')">Hecho</button>
+</div>`;
+}
+
+if(diff>=0 && diff<=7){
+semanaHTML+=`
+<div class="item">
+<b>${i.titulo}</b> (${diff} días)<br>
+<button onclick="done('${d.id}')">Hecho</button>
+</div>`;
+}
+
+});
+
+hoy.innerHTML=hoyHTML||"Nada hoy";
+semana.innerHTML=semanaHTML||"Nada próximos días";
+total.innerHTML=totalHTML||"Sin datos";
+
+}
+
+window.done=async(id)=>{
+await updateDoc(doc(db,"agenda",id),{
+estado:"realizado"
+});
+load();
+};
+
+window.save=async()=>{
+await addDoc(collection(db,"agenda"),{
+uid:auth.currentUser.uid,
+titulo:titulo.value,
+fecha:fecha.value,
+tipo:tipo.value,
+estado:"pendiente"
+});
+titulo.value="";
+fecha.value="";
+tipo.value="";
+load();
+};
+
+window.login=()=>{
+signInWithEmailAndPassword(auth,email.value,password.value)
+.catch(e=>alert("Error login: "+e.message));
+};
+
+window.register=()=>{
+createUserWithEmailAndPassword(auth,email.value,password.value)
+.catch(e=>alert("Error registro: "+e.message));
+};
+
+window.logout=()=>signOut(auth);
+
+onAuthStateChanged(auth,u=>{
+if(u){
+login.style.display="none";
+app.style.display="block";
+user.innerText=u.email;
+load();
+}else{
+login.style.display="block";
+app.style.display="none";
+}
+});
+
+</script>
+
+</body>
+</html>
