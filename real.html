@@ -1,1 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oxkio</title>
 
+<style>
+body{margin:0;padding:20px;background:#020617;color:white;font-family:Arial}
+.box{max-width:720px;margin:auto}
+.logo{width:70px;height:70px;border-radius:12px;background:#111827;margin-bottom:15px}
+.logo img{width:100%;height:100%}
+input{width:100%;padding:10px;margin-top:10px;border-radius:10px;border:1px solid #475569}
+button{margin-top:10px;padding:10px;border:none;border-radius:10px;background:#2563eb;color:white}
+.success{background:#166534}
+.card{margin-top:20px;background:#111827;padding:15px;border-radius:10px}
+.item{padding:10px;border-bottom:1px solid #334155}
+.tachado{text-decoration:line-through;opacity:0.5}
+</style>
+
+</head>
+
+<body>
+<div class="box">
+
+<div class="logo"><img src="logo.PNG"></div>
+
+<h1>Oxkio</h1>
+
+<div id="loginBox" class="card">
+<input id="email" placeholder="Email">
+<input id="password" placeholder="Contraseña">
+<button onclick="registrar()">Registrarme</button>
+<button onclick="entrar()">Entrar</button>
+</div>
+
+<div id="appBox" style="display:none">
+
+<p>Usuario: <b id="usuarioActivo"></b></p>
+<button onclick="salir()">Salir</button>
+
+<div class="card">
+<input id="titulo" placeholder="Título">
+<input id="fecha" placeholder="DD/MM/AAAA">
+<input id="tipo" placeholder="Tipo">
+<button onclick="guardar()">Guardar</button>
+</div>
+
+<div class="card">
+<h3>Hoy</h3>
+<div id="hoy"></div>
+</div>
+
+<div class="card">
+<h3>Semana</h3>
+<div id="semana"></div>
+</div>
+
+<div class="card">
+<h3>Toda la agenda</h3>
+<div id="lista"></div>
+</div>
+
+</div>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDFySiO23mqJilJPUfE-dLv9Zbs9gcY_kg",
+  authDomain: "oxkio-9af40.firebaseapp.com",
+  projectId: "oxkio-9af40",
+  storageBucket: "oxkio-9af40.firebasestorage.app",
+  messagingSenderId: "975887789346",
+  appId: "1:975887789346:web:fa581107285b989d90897b"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+function parseFecha(f){
+let p=f.split("/");
+return new Date(p[2],p[1]-1,p[0]);
+}
+
+function hoyStr(){
+let h=new Date();
+return `${String(h.getDate()).padStart(2,"0")}/${String(h.getMonth()+1).padStart(2,"0")}/${h.getFullYear()}`;
+}
+
+function dias(f){
+let h=new Date();h.setHours(0,0,0,0);
+return Math.round((f-h)/86400000);
+}
+
+async function ver(){
+let user=auth.currentUser;
+if(!user)return;
+
+let snap=await getDocs(query(collection(db,"agenda"),where("uid","==",user.uid)));
+
+let hoyHTML="",semanaHTML="",todoHTML="";
+
+snap.forEach(d=>{
+let i=d.data();
+let fecha=parseFecha(i.fecha);
+let diff=dias(fecha);
+
+let tachado=i.estado==="realizado"?"tachado":"";
+
+todoHTML+=`
+<div class="item">
+<b class="${tachado}">${i.titulo}</b><br>
+${i.fecha} - ${i.tipo}<br>
+<button onclick="toggle('${d.id}','${i.estado}')"
+class="${i.estado==="realizado"?"success":""}">
+${i.estado==="realizado"?"Hecho":"Marcar hecho"}
+</button>
+</div>`;
+
+if(i.estado!=="realizado" && i.fecha===hoyStr()){
+hoyHTML+=`<div class="item">${i.titulo}</div>`;
+}
+
+if(i.estado!=="realizado" && diff>=0 && diff<=7){
+semanaHTML+=`<div class="item">${i.titulo} (${diff}d)</div>`;
+}
+
+});
+
+hoy.innerHTML=hoyHTML||"Nada hoy";
+semana.innerHTML=semanaHTML||"Nada semana";
+lista.innerHTML=todoHTML||"Vacío";
+
+}
+
+window.toggle=async(id,estado)=>{
+await updateDoc(doc(db,"agenda",id),{
+estado: estado==="realizado"?"pendiente":"realizado"
+});
+ver();
+};
+
+window.registrar=()=>createUserWithEmailAndPassword(auth,email.value,password.value);
+window.entrar=()=>signInWithEmailAndPassword(auth,email.value,password.value);
+window.salir=()=>signOut(auth);
+
+window.guardar=async()=>{
+await addDoc(collection(db,"agenda"),{
+uid:auth.currentUser.uid,
+titulo:titulo.value,
+fecha:fecha.value,
+tipo:tipo.value,
+estado:"pendiente"
+});
+ver();
+};
+
+onAuthStateChanged(auth,u=>{
+if(u){
+loginBox.style.display="none";
+appBox.style.display="block";
+usuarioActivo.innerText=u.email;
+ver();
+}else{
+loginBox.style.display="block";
+appBox.style.display="none";
+}
+});
+
+</script>
+</body>
+</html>
