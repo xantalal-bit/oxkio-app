@@ -1,1 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oxkio</title>
+  <style>
+    body{
+      margin:0;
+      background:#020617;
+      color:white;
+      font-family:Arial,sans-serif;
+    }
+    .container{
+      max-width:430px;
+      margin:0 auto;
+      padding:20px;
+    }
+    .logo{
+      width:96px;
+      height:96px;
+      border-radius:20px;
+      margin-bottom:10px;
+      object-fit:cover;
+      background:#111827;
+      display:block;
+    }
+    .title{
+      font-size:42px;
+      font-weight:700;
+      margin-bottom:20px;
+    }
+    .card{
+      background:#0f172a;
+      padding:20px;
+      border-radius:20px;
+      margin-bottom:20px;
+    }
+    input, select{
+      width:100%;
+      box-sizing:border-box;
+      padding:14px;
+      border-radius:12px;
+      border:none;
+      margin-bottom:10px;
+      font-size:16px;
+      background:#f8fafc;
+      color:#111827;
+    }
+    button{
+      padding:12px 14px;
+      border:none;
+      border-radius:12px;
+      font-weight:700;
+      margin-top:6px;
+      margin-right:8px;
+      cursor:pointer;
+      font-size:16px;
+    }
+    .btn-primary{ background:#2563eb; color:white; }
+    .btn-danger{ background:#dc2626; color:white; }
+    .btn-success{ background:#16a34a; color:white; }
+    .btn-secondary{ background:#334155; color:white; }
+    .section-title{
+      font-size:22px;
+      margin-bottom:10px;
+      font-weight:700;
+    }
+    .task{
+      padding:10px 0;
+      border-bottom:1px solid #334155;
+    }
+    .task:last-child{
+      border-bottom:none;
+    }
+    .done{
+      text-decoration:line-through;
+      opacity:.55;
+    }
+    .msg{
+      color:#cbd5e1;
+      line-height:1.45;
+      margin-top:10px;
+    }
+    #loading{
+      display:block;
+    }
+    #loginBox,
+    #app{
+      display:none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="logo.png" class="logo" alt="Oxkio logo">
+    <div class="title">Oxkio</div>
 
+    <div id="loading" class="card">
+      <div class="section-title">Cargando</div>
+      <div class="msg">Comprobando acceso...</div>
+    </div>
+
+    <div id="loginBox" class="card">
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Contraseña">
+      <button class="btn-primary" onclick="login()">Entrar</button>
+      <button class="btn-secondary" onclick="register()">Registro</button>
+      <div id="loginMsg" class="msg"></div>
+    </div>
+
+    <div id="app">
+      <div class="card">
+        <div id="userEmail" class="msg" style="margin-top:0;"></div>
+        <button class="btn-danger" onclick="logout()">Salir</button>
+        <button class="btn-secondary" onclick="toggleConfig()">Configuración</button>
+      </div>
+
+      <div id="configBox" class="card" style="display:none;">
+        <div class="section-title">Configuración</div>
+        <div class="msg">Borra solo los datos de prueba del usuario actual.</div>
+        <button class="btn-danger" onclick="resetApp()">Reiniciar entorno de pruebas</button>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Nuevo evento</div>
+        <input id="titulo" placeholder="Título">
+        <input id="fecha" placeholder="DD/MM/AAAA o 13042026">
+        <input id="tipo" placeholder="Tipo">
+        <button class="btn-primary" onclick="guardar()">Guardar</button>
+        <div id="agendaMsg" class="msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Hoy</div>
+        <div id="hoy">Nada hoy</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Agenda completa</div>
+        <div id="agenda">Sin datos</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      deleteDoc,
+      doc,
+      query,
+      where,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDFySiO23mqJilJPUfE-dLv9Zbs9gcY_kg",
+      authDomain: "oxkio-9af40.firebaseapp.com",
+      projectId: "oxkio-9af40",
+      storageBucket: "oxkio-9af40.firebasestorage.app",
+      messagingSenderId: "975887789346",
+      appId: "1:975887789346:web:fa581107285b989d90897b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    const loading = document.getElementById("loading");
+    const loginBox = document.getElementById("loginBox");
+    const appBox = document.getElementById("app");
+    const loginMsg = document.getElementById("loginMsg");
+    const agendaMsg = document.getElementById("agendaMsg");
+    const userEmail = document.getElementById("userEmail");
+    const configBox = document.getElementById("configBox");
+
+    function showLoading() {
+      loading.style.display = "block";
+      loginBox.style.display = "none";
+      appBox.style.display = "none";
+    }
+
+    function showLogin(msg = "") {
+      loading.style.display = "none";
+      loginBox.style.display = "block";
+      appBox.style.display = "none";
+      loginMsg.textContent = msg;
+    }
+
+    function showApp(email) {
+      loading.style.display = "none";
+      loginBox.style.display = "none";
+      appBox.style.display = "block";
+      userEmail.textContent = email;
+    }
+
+    function formatFechaEntrada(valor) {
+      const limpio = (valor || "").replace(/\D/g, "");
+      if (limpio.length === 8) {
+        return `${limpio.slice(0,2)}/${limpio.slice(2,4)}/${limpio.slice(4,8)}`;
+      }
+      return valor.trim();
+    }
+
+    function parseFecha(str) {
+      if (!str) return null;
+      const p = str.split("/");
+      if (p.length !== 3) return null;
+
+      const d = parseInt(p[0], 10);
+      const m = parseInt(p[1], 10) - 1;
+      const y = parseInt(p[2], 10);
+
+      const fecha = new Date(y, m, d);
+      if (
+        fecha.getFullYear() !== y ||
+        fecha.getMonth() !== m ||
+        fecha.getDate() !== d
+      ) return null;
+
+      fecha.setHours(0,0,0,0);
+      return fecha;
+    }
+
+    function hoyTexto() {
+      const h = new Date();
+      return `${String(h.getDate()).padStart(2,"0")}/${String(h.getMonth()+1).padStart(2,"0")}/${h.getFullYear()}`;
+    }
+
+    window.toggleConfig = function () {
+      configBox.style.display = configBox.style.display === "none" ? "block" : "none";
+    };
+
+    async function cargar() {
+      if (!currentUser) return;
+
+      const hoy = document.getElementById("hoy");
+      const agenda = document.getElementById("agenda");
+
+      hoy.innerHTML = "Cargando...";
+      agenda.innerHTML = "Cargando...";
+
+      const q = query(collection(db, "tareas"), where("user", "==", currentUser.uid));
+      const snap = await getDocs(q);
+
+      const items = [];
+      snap.forEach((d) => {
+        items.push({ id: d.id, ...d.data() });
+      });
+
+      items.sort((a, b) => {
+        const fa = parseFecha(a.fecha);
+        const fb = parseFecha(b.fecha);
+        if (fa && fb) return fa - fb;
+        return 0;
+      });
+
+      let hoyHTML = "";
+      let agendaHTML = "";
+
+      for (const item of items) {
+        const done = item.estado === "hecho";
+
+        agendaHTML += `
+          <div class="task ${done ? "done" : ""}">
+            <b>${item.titulo || ""}</b><br>
+            ${item.fecha || ""} - ${item.tipo || ""}<br>
+            ${done ? "✔ Realizado" : `<button class="btn-success" onclick="marcar('${item.id}')">Hecho</button>`}
+          </div>
+        `;
+
+        if (!done && item.fecha === hoyTexto()) {
+          hoyHTML += `
+            <div class="task">
+              <b>${item.titulo || ""}</b><br>
+              <button class="btn-success" onclick="marcar('${item.id}')">Hecho</button>
+            </div>
+          `;
+        }
+      }
+
+      hoy.innerHTML = hoyHTML || "Nada hoy";
+      agenda.innerHTML = agendaHTML || "Sin datos";
+    }
+
+    window.marcar = async function(id) {
+      await updateDoc(doc(db, "tareas", id), {
+        estado: "hecho"
+      });
+      await cargar();
+    };
+
+    window.guardar = async function () {
+      if (!currentUser) {
+        agendaMsg.textContent = "Debes iniciar sesión.";
+        return;
+      }
+
+      const titulo = document.getElementById("titulo").value.trim();
+      const fechaRaw = document.getElementById("fecha").value;
+      const tipo = document.getElementById("tipo").value.trim();
+      const fecha = formatFechaEntrada(fechaRaw);
+
+      if (!titulo || !fecha || !tipo) {
+        agendaMsg.textContent = "Completa título, fecha y tipo.";
+        return;
+      }
+
+      if (!parseFecha(fecha)) {
+        agendaMsg.textContent = "Fecha no válida. Usa DD/MM/AAAA o 13042026.";
+        return;
+      }
+
+      await addDoc(collection(db, "tareas"), {
+        titulo,
+        fecha,
+        tipo,
+        estado: "pendiente",
+        user: currentUser.uid,
+        createdAt: Date.now()
+      });
+
+      document.getElementById("titulo").value = "";
+      document.getElementById("fecha").value = "";
+      document.getElementById("tipo").value = "";
+      agendaMsg.textContent = "Guardado.";
+      await cargar();
+    };
+
+    window.resetApp = async function () {
+      if (!currentUser) return;
+
+      const confirmar = confirm("¿Estás seguro? Se borrarán los datos de prueba del usuario actual.");
+      if (!confirmar) return;
+
+      const q = query(collection(db, "tareas"), where("user", "==", currentUser.uid));
+      const snap = await getDocs(q);
+
+      for (const d of snap.docs) {
+        await deleteDoc(doc(db, "tareas", d.id));
+      }
+
+      agendaMsg.textContent = "Entorno de pruebas reiniciado.";
+      await cargar();
+    };
+
+    window.login = async function () {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        showLogin("Escribe email y contraseña.");
+        return;
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        showLogin("Email o contraseña incorrectos.");
+      }
+    };
+
+    window.register = async function () {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        showLogin("Escribe email y contraseña.");
+        return;
+      }
+
+      if (password.length < 6) {
+        showLogin("La contraseña debe tener al menos 6 caracteres.");
+        return;
+      }
+
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        if (e.code === "auth/email-already-in-use") {
+          showLogin("Ese email ya está registrado. Pulsa Entrar.");
+        } else {
+          showLogin("No se pudo registrar.");
+        }
+      }
+    };
+
+    window.logout = async function () {
+      await signOut(auth);
+    };
+
+    showLoading();
+
+    onAuthStateChanged(auth, async (u) => {
+      if (u) {
+        currentUser = u;
+        showApp(u.email);
+        await cargar();
+      } else {
+        currentUser = null;
+        showLogin("");
+      }
+    });
+  </script>
+</body>
+</html>
