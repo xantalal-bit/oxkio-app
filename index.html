@@ -1,1 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oxkio</title>
 
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(180deg, #020617, #020617);
+  color: white;
+}
+
+.container {
+  max-width: 420px;
+  margin: auto;
+  padding: 20px;
+}
+
+.logo {
+  width: 90px;
+  height: 90px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+
+.title {
+  font-size: 42px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #0f172a;
+  padding: 20px;
+  border-radius: 18px;
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+button {
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-secondary {
+  background: #1e293b;
+  color: white;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: white;
+}
+
+.btn-success {
+  background: #16a34a;
+  color: white;
+}
+
+.section-title {
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+.task {
+  margin-bottom: 10px;
+}
+
+.done {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.tag {
+  background: #1e293b;
+  padding: 6px 10px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-top: 6px;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<img src="logo.png" class="logo">
+<div class="title">Oxkio</div>
+
+<div id="loginBox" class="card">
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Contraseña">
+  <button class="btn-primary" onclick="login()">Entrar</button>
+  <button class="btn-secondary" onclick="register()">Registrarme</button>
+</div>
+
+<div id="app" style="display:none;">
+
+<div class="card">
+  <div id="userEmail"></div>
+  <button class="btn-danger" onclick="logout()">Salir</button>
+</div>
+
+<div class="card">
+  <div class="section-title">Nueva tarea</div>
+  <input id="titulo" placeholder="Título">
+  <input id="fecha" placeholder="DD/MM/AAAA">
+  <input id="tipo" placeholder="Tipo">
+  <button class="btn-primary" onclick="guardar()">Guardar</button>
+</div>
+
+<div class="card">
+  <div class="section-title">Hoy</div>
+  <div id="hoy">Nada hoy</div>
+</div>
+
+<div class="card">
+  <div class="section-title">Próximos días</div>
+  <div id="proximos">Nada en próximos días</div>
+</div>
+
+<div class="card">
+  <div class="section-title">Agenda completa</div>
+  <div id="agenda"></div>
+</div>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDFySiO23mqJilJPUfE-dLv9Zbs9gcY_kg",
+  authDomain: "oxkio-9af40.firebaseapp.com",
+  projectId: "oxkio-9af40",
+  storageBucket: "oxkio-9af40.firebasestorage.app",
+  messagingSenderId: "975887789346",
+  appId: "1:975887789346:web:fa581107285b989d90897b"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore();
+
+let currentUser = null;
+
+window.login = async () => {
+  await signInWithEmailAndPassword(auth, email.value, password.value);
+};
+
+window.register = async () => {
+  await createUserWithEmailAndPassword(auth, email.value, password.value);
+};
+
+window.logout = async () => {
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    loginBox.style.display = "none";
+    app.style.display = "block";
+    userEmail.innerText = user.email;
+    cargar();
+  } else {
+    loginBox.style.display = "block";
+    app.style.display = "none";
+  }
+});
+
+window.guardar = async () => {
+  await addDoc(collection(db, "tareas"), {
+    titulo: titulo.value,
+    fecha: fecha.value,
+    tipo: tipo.value,
+    estado: "pendiente",
+    user: currentUser.uid
+  });
+  cargar();
+};
+
+async function cargar() {
+  agenda.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "tareas"));
+
+  snapshot.forEach(docu => {
+    const data = docu.data();
+    if (data.user !== currentUser.uid) return;
+
+    const div = document.createElement("div");
+    div.className = "task " + (data.estado === "hecho" ? "done" : "");
+    div.innerHTML = `
+      <b>${data.titulo}</b><br>
+      ${data.fecha} - ${data.tipo}<br>
+      <span class="tag">${data.estado}</span><br>
+      <button class="btn-success" onclick="marcar('${docu.id}')">Hecho</button>
+    `;
+    agenda.appendChild(div);
+  });
+}
+
+window.marcar = async (id) => {
+  await updateDoc(doc(db, "tareas", id), {
+    estado: "hecho"
+  });
+  cargar();
+};
+
+</script>
+
+</body>
+</html>
