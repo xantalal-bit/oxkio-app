@@ -1,1 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oxkio</title>
+  <style>
+    body{
+      margin:0;
+      background:#020617;
+      color:white;
+      font-family:Arial,sans-serif;
+    }
+    .container{
+      max-width:430px;
+      margin:0 auto;
+      padding:20px;
+    }
+    .logo{
+      width:96px;
+      height:96px;
+      border-radius:22px;
+      margin-bottom:12px;
+      object-fit:cover;
+      background:#111827;
+      display:block;
+    }
+    .title{
+      font-size:42px;
+      font-weight:700;
+      margin:0 0 20px 0;
+    }
+    .card{
+      background:#0f172a;
+      padding:20px;
+      border-radius:20px;
+      margin-bottom:20px;
+      box-shadow:0 8px 24px rgba(0,0,0,.18);
+    }
+    input, select{
+      width:100%;
+      box-sizing:border-box;
+      padding:14px;
+      border-radius:14px;
+      border:none;
+      margin-bottom:12px;
+      font-size:16px;
+      background:#f8fafc;
+      color:#111827;
+    }
+    button{
+      padding:12px 18px;
+      border-radius:14px;
+      border:none;
+      font-weight:700;
+      cursor:pointer;
+      margin:6px 8px 0 0;
+      font-size:16px;
+    }
+    .btn-primary{ background:#2563eb; color:white; }
+    .btn-secondary{ background:#334155; color:white; }
+    .btn-danger{ background:#dc2626; color:white; }
+    .btn-success{ background:#16a34a; color:white; }
+    .btn-warning{ background:#b45309; color:white; }
+    .section-title{
+      font-size:22px;
+      margin:0 0 14px 0;
+      font-weight:700;
+    }
+    .task{
+      padding:14px 0;
+      border-bottom:1px solid #334155;
+    }
+    .task:last-child{
+      border-bottom:none;
+    }
+    .done{
+      text-decoration:line-through;
+      opacity:.55;
+    }
+    .tag{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:12px;
+      margin-top:6px;
+      margin-right:6px;
+      font-size:13px;
+      background:#1e293b;
+      color:#cbd5e1;
+    }
+    .tag-red{
+      background:#7f1d1d;
+      color:#fecaca;
+    }
+    .tag-orange{
+      background:#78350f;
+      color:#fde68a;
+    }
+    .tag-blue{
+      background:#1e3a8a;
+      color:#dbeafe;
+    }
+    .tag-green{
+      background:#14532d;
+      color:#dcfce7;
+    }
+    .msg{
+      color:#cbd5e1;
+      margin-top:10px;
+      line-height:1.5;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-top:12px;
+    }
+    .mini{
+      background:#111827;
+      border-radius:16px;
+      padding:14px;
+    }
+    .mini .num{
+      font-size:30px;
+      font-weight:700;
+      margin-bottom:4px;
+    }
+    .mini .label{
+      color:#cbd5e1;
+    }
+    #loading{
+      display:block;
+    }
+    #loginBox,
+    #app{
+      display:none;
+    }
+    .subtle{
+      color:#94a3b8;
+      font-size:14px;
+      margin-top:2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="logo.png" class="logo" alt="Oxkio logo">
+    <div class="title">Oxkio</div>
 
+    <div id="loading" class="card">
+      <div class="section-title">Cargando</div>
+      <div class="msg">Comprobando acceso...</div>
+    </div>
+
+    <div id="loginBox" class="card">
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Contraseña">
+      <button class="btn-primary" onclick="login()">Entrar</button>
+      <button class="btn-secondary" onclick="register()">Registrarme</button>
+      <div id="loginMsg" class="msg"></div>
+    </div>
+
+    <div id="app">
+      <div class="card">
+        <div id="userEmail" class="msg" style="margin-top:0;"></div>
+        <button class="btn-danger" onclick="logout()">Salir</button>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Nueva tarea</div>
+        <input id="titulo" placeholder="Título">
+        <input id="fecha" placeholder="DD/MM/AAAA">
+        <input id="tipo" placeholder="Tipo">
+        <select id="categoriaAviso">
+          <option value="auto">Aviso automático Oxkio</option>
+          <option value="importante">Importante</option>
+          <option value="normal">Normal</option>
+          <option value="baja">Baja</option>
+        </select>
+        <button class="btn-primary" onclick="guardar()">Guardar</button>
+        <div id="agendaMsg" class="msg"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Resumen automático</div>
+        <div id="resumenTexto" class="msg">Cargando resumen...</div>
+        <div class="grid">
+          <div class="mini">
+            <div class="num" id="numHoy">0</div>
+            <div class="label">Hoy</div>
+          </div>
+          <div class="mini">
+            <div class="num" id="numSemana">0</div>
+            <div class="label">Semana</div>
+          </div>
+          <div class="mini">
+            <div class="num" id="numUrgente">0</div>
+            <div class="label">Urgentes</div>
+          </div>
+          <div class="mini">
+            <div class="num" id="numHechas">0</div>
+            <div class="label">Realizadas</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Sugerencia Oxkio</div>
+        <div id="sugerencia" class="msg">Preparando sugerencia...</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Carga semanal</div>
+        <div id="cargaSemanal" class="msg">Analizando carga...</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Avisos automáticos</div>
+        <div class="subtle">Retrasado, hoy, mañana, en 3 días y en 7 días</div>
+        <div id="avisosAutomaticos" class="msg">Cargando avisos...</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Atención inmediata</div>
+        <div id="urgentes">Nada urgente</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Hoy</div>
+        <div id="hoy">Nada hoy</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Próximos días</div>
+        <div id="proximos">Nada en próximos días</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Agenda completa</div>
+        <div id="agenda">Sin datos</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      updateDoc,
+      doc,
+      query,
+      where
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDFySiO23mqJilJPUfE-dLv9Zbs9gcY_kg",
+      authDomain: "oxkio-9af40.firebaseapp.com",
+      projectId: "oxkio-9af40",
+      storageBucket: "oxkio-9af40.firebasestorage.app",
+      messagingSenderId: "975887789346",
+      appId: "1:975887789346:web:fa581107285b989d90897b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    const loadingBox = document.getElementById("loading");
+    const loginBox = document.getElementById("loginBox");
+    const appBox = document.getElementById("app");
+    const userEmail = document.getElementById("userEmail");
+    const loginMsg = document.getElementById("loginMsg");
+    const agendaMsg = document.getElementById("agendaMsg");
+
+    function parseFecha(str) {
+      if (!str) return null;
+      const p = str.split("/");
+      if (p.length !== 3) return null;
+
+      const d = parseInt(p[0], 10);
+      const m = parseInt(p[1], 10) - 1;
+      const y = parseInt(p[2], 10);
+
+      const fecha = new Date(y, m, d);
+      if (
+        fecha.getFullYear() !== y ||
+        fecha.getMonth() !== m ||
+        fecha.getDate() !== d
+      ) return null;
+
+      fecha.setHours(0,0,0,0);
+      return fecha;
+    }
+
+    function hoyStr() {
+      const h = new Date();
+      return `${String(h.getDate()).padStart(2,"0")}/${String(h.getMonth()+1).padStart(2,"0")}/${h.getFullYear()}`;
+    }
+
+    function diasHasta(fecha) {
+      const h = new Date();
+      h.setHours(0,0,0,0);
+      return Math.round((fecha - h) / 86400000);
+    }
+
+    function etiquetaAviso(diff) {
+      if (diff < 0) return { texto: "Retrasado", clase: "tag-red" };
+      if (diff === 0) return { texto: "Hoy", clase: "tag-red" };
+      if (diff === 1) return { texto: "Mañana", clase: "tag-orange" };
+      if (diff === 3) return { texto: "En 3 días", clase: "tag-orange" };
+      if (diff === 7) return { texto: "En 7 días", clase: "tag-blue" };
+      if (diff > 0 && diff < 7) return { texto: `En ${diff} días`, clase: "tag-blue" };
+      return { texto: "Pendiente", clase: "tag-blue" };
+    }
+
+    function etiquetaPrioridad(diff, estado, categoriaAviso) {
+      if (estado === "hecho") return { texto: "Realizado", clase: "tag-green" };
+      if (diff === null) return { texto: "Sin fecha válida", clase: "tag-blue" };
+      if (diff < 0) return { texto: "Retrasado", clase: "tag-red" };
+      if (diff === 0) return { texto: "Hoy", clase: "tag-red" };
+      if (categoriaAviso === "importante") return { texto: "Importante", clase: "tag-orange" };
+      if (diff === 1) return { texto: "Mañana", clase: "tag-orange" };
+      if (diff <= 3) return { texto: "Alta", clase: "tag-orange" };
+      if (diff <= 7) return { texto: "Media", clase: "tag-blue" };
+      return { texto: categoriaAviso === "baja" ? "Baja" : "Pendiente", clase: "tag-blue" };
+    }
+
+    function mostrarLogin(msg = "") {
+      loadingBox.style.display = "none";
+      appBox.style.display = "none";
+      loginBox.style.display = "block";
+      loginMsg.textContent = msg;
+    }
+
+    function mostrarApp(email) {
+      loadingBox.style.display = "none";
+      loginBox.style.display = "none";
+      appBox.style.display = "block";
+      userEmail.textContent = email;
+    }
+
+    function renderResumen(pendientes, hechas, hoyCount, semanaCount, urgentesCount, retrasadasCount) {
+      document.getElementById("numHoy").textContent = hoyCount;
+      document.getElementById("numSemana").textContent = semanaCount;
+      document.getElementById("numUrgente").textContent = urgentesCount + retrasadasCount;
+      document.getElementById("numHechas").textContent = hechas;
+
+      let texto = "";
+      if (pendientes === 0) {
+        texto = "No tienes tareas pendientes. Buen momento para revisar correo, documentos o planificación.";
+      } else if (retrasadasCount > 0) {
+        texto = `Tienes ${retrasadasCount} tarea(s) retrasada(s). Conviene resolverlas antes de añadir nuevas.`;
+      } else if (urgentesCount > 0) {
+        texto = `Tienes ${urgentesCount} tarea(s) de atención inmediata entre hoy y mañana.`;
+      } else if (hoyCount > 0) {
+        texto = `Hoy tienes ${hoyCount} tarea(s) pendiente(s).`;
+      } else {
+        texto = `Esta semana tienes ${semanaCount} tarea(s) pendiente(s).`;
+      }
+
+      document.getElementById("resumenTexto").textContent = texto;
+    }
+
+    function renderSugerencia(pendientes, hoyCount, semanaCount, urgentesCount, retrasadasCount, cargaAlta) {
+      let texto = "";
+
+      if (retrasadasCount > 0) {
+        texto = "Oxkio sugiere priorizar primero lo retrasado, después lo de hoy y por último reorganizar lo semanal.";
+      } else if (urgentesCount > 0) {
+        texto = "Oxkio sugiere cerrar hoy las tareas urgentes antes de abrir nuevas líneas de trabajo.";
+      } else if (cargaAlta) {
+        texto = "Oxkio sugiere repartir carga: adelanta una tarea sencilla y deja hueco para imprevistos.";
+      } else if (hoyCount > 0) {
+        texto = "Oxkio sugiere completar primero lo de hoy y dejar preparada la siguiente acción de la semana.";
+      } else if (semanaCount > 0) {
+        texto = "Oxkio sugiere revisar la semana y adelantar una tarea para descargar los próximos días.";
+      } else if (pendientes === 0) {
+        texto = "Oxkio sugiere aprovechar este hueco para revisar documentación, correo o captación de clientes.";
+      } else {
+        texto = "Oxkio sugiere revisar prioridades y fijar una tarea clave para hoy.";
+      }
+
+      document.getElementById("sugerencia").textContent = texto;
+    }
+
+    function renderCargaSemanal(semanaCount, retrasadasCount) {
+      let texto = "";
+      if (retrasadasCount > 0) {
+        texto = "La semana ya viene condicionada por tareas retrasadas. Conviene limpiar atraso antes de cargar más.";
+      } else if (semanaCount >= 7) {
+        texto = "Carga semanal alta. Oxkio detecta una semana intensa. Recomienda repartir o adelantar tareas.";
+      } else if (semanaCount >= 4) {
+        texto = "Carga semanal media. Hay margen, pero conviene ordenar prioridades.";
+      } else if (semanaCount > 0) {
+        texto = "Carga semanal controlada. Buena situación para ejecutar con calma.";
+      } else {
+        texto = "Semana vacía. Puedes usarla para planificación, documentación y preparación comercial.";
+      }
+      document.getElementById("cargaSemanal").textContent = texto;
+      return semanaCount >= 7;
+    }
+
+    window.login = async function () {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      loginMsg.textContent = "";
+
+      if (!email || !password) {
+        loginMsg.textContent = "Escribe email y contraseña.";
+        return;
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        loginMsg.textContent = "Email o contraseña incorrectos.";
+      }
+    };
+
+    window.register = async function () {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      loginMsg.textContent = "";
+
+      if (!email || !password) {
+        loginMsg.textContent = "Escribe email y contraseña.";
+        return;
+      }
+
+      if (password.length < 6) {
+        loginMsg.textContent = "La contraseña debe tener al menos 6 caracteres.";
+        return;
+      }
+
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        if (e.code === "auth/email-already-in-use") {
+          loginMsg.textContent = "Ese email ya está registrado. Pulsa Entrar.";
+        } else {
+          loginMsg.textContent = "No se pudo registrar.";
+        }
+      }
+    };
+
+    window.logout = async function () {
+      await signOut(auth);
+    };
+
+    window.guardar = async function () {
+      const titulo = document.getElementById("titulo").value.trim();
+      const fecha = document.getElementById("fecha").value.trim();
+      const tipo = document.getElementById("tipo").value.trim();
+      const categoriaAviso = document.getElementById("categoriaAviso").value;
+
+      if (!currentUser) {
+        agendaMsg.textContent = "Debes iniciar sesión.";
+        return;
+      }
+
+      if (!titulo || !fecha || !tipo) {
+        agendaMsg.textContent = "Completa título, fecha y tipo.";
+        return;
+      }
+
+      if (!parseFecha(fecha)) {
+        agendaMsg.textContent = "Fecha en formato DD/MM/AAAA.";
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "tareas"), {
+          titulo,
+          fecha,
+          tipo,
+          categoriaAviso,
+          estado: "pendiente",
+          user: currentUser.uid,
+          createdAt: Date.now()
+        });
+
+        document.getElementById("titulo").value = "";
+        document.getElementById("fecha").value = "";
+        document.getElementById("tipo").value = "";
+        document.getElementById("categoriaAviso").value = "auto";
+        agendaMsg.textContent = "Guardado.";
+        await cargar();
+      } catch (e) {
+        agendaMsg.textContent = "No se pudo guardar.";
+      }
+    };
+
+    window.marcar = async function (id) {
+      await updateDoc(doc(db, "tareas", id), { estado: "hecho" });
+      await cargar();
+    };
+
+    async function cargar() {
+      if (!currentUser) return;
+
+      const hoy = document.getElementById("hoy");
+      const proximos = document.getElementById("proximos");
+      const agenda = document.getElementById("agenda");
+      const urgentes = document.getElementById("urgentes");
+      const avisosAutomaticos = document.getElementById("avisosAutomaticos");
+
+      hoy.innerHTML = "Cargando...";
+      proximos.innerHTML = "Cargando...";
+      agenda.innerHTML = "Cargando...";
+      urgentes.innerHTML = "Cargando...";
+      avisosAutomaticos.innerHTML = "Cargando...";
+
+      const q = query(collection(db, "tareas"), where("user", "==", currentUser.uid));
+      const snapshot = await getDocs(q);
+
+      const items = [];
+      snapshot.forEach((d) => {
+        items.push({ id: d.id, ...d.data() });
+      });
+
+      items.sort((a, b) => {
+        const fa = parseFecha(a.fecha);
+        const fb = parseFecha(b.fecha);
+        if (fa && fb) return fa - fb;
+        return (a.createdAt || 0) - (b.createdAt || 0);
+      });
+
+      let hoyHTML = "";
+      let proximosHTML = "";
+      let agendaHTML = "";
+      let urgentesHTML = "";
+      let avisosHTML = "";
+
+      let pendientes = 0;
+      let hechas = 0;
+      let hoyCount = 0;
+      let semanaCount = 0;
+      let urgentesCount = 0;
+      let retrasadasCount = 0;
+
+      for (const item of items) {
+        const fechaObj = parseFecha(item.fecha);
+        const diff = fechaObj ? diasHasta(fechaObj) : null;
+        const categoriaAviso = item.categoriaAviso || "auto";
+        const prioridad = etiquetaPrioridad(diff, item.estado === "hecho" ? "hecho" : "pendiente", categoriaAviso);
+
+        if (item.estado === "hecho") hechas++;
+        else pendientes++;
+
+        agendaHTML += `
+          <div class="task ${item.estado === "hecho" ? "done" : ""}">
+            <b>${item.titulo}</b><br>
+            ${item.fecha} - ${item.tipo}<br>
+            <span class="tag ${prioridad.clase}">${prioridad.texto}</span>
+            ${item.estado === "pendiente" ? `<br><button class="btn-success" onclick="marcar('${item.id}')">Hecho</button>` : ""}
+          </div>
+        `;
+
+        if (item.estado === "hecho") continue;
+
+        if (diff !== null && diff < 0) {
+          retrasadasCount++;
+          urgentesHTML += `
+            <div class="task">
+              <b>${item.titulo}</b><br>
+              <span class="tag tag-red">Retrasado</span><br>
+              <button class="btn-success" onclick="marcar('${item.id}')">Hecho</button>
+            </div>
+          `;
+        }
+
+        if (item.fecha === hoyStr()) {
+          hoyCount++;
+          urgentesCount++;
+          hoyHTML += `
+            <div class="task">
+              <b>${item.titulo}</b><br>
+              <span class="tag tag-red">Hoy</span><br>
+              <button class="btn-success" onclick="marcar('${item.id}')">Hecho</button>
+            </div>
+          `;
+        }
+
+        if (diff !== null && diff >= 0 && diff <= 7) {
+          semanaCount++;
+          proximosHTML += `
+            <div class="task">
+              <b>${item.titulo}</b><br>
+              <span class="tag ${diff <= 1 ? "tag-orange" : "tag-blue"}">${diff === 0 ? "Hoy" : `En ${diff} día(s)`}</span><br>
+              <button class="btn-success" onclick="marcar('${item.id}')">Hecho</button>
+            </div>
+          `;
+        }
+
+        if (diff === 1) {
+          urgentesCount++;
+          urgentesHTML += `
+            <div class="task">
+              <b>${item.titulo}</b><br>
+              <span class="tag tag-orange">Mañana</span><br>
+              <button class="btn-success" onclick="marcar('${item.id}')">Hecho</button>
+            </div>
+          `;
+        }
+
+        if (diff !== null && (diff < 0 || diff === 0 || diff === 1 || diff === 3 || diff === 7)) {
+          const aviso = etiquetaAviso(diff);
+          avisosHTML += `
+            <div class="task">
+              <b>${item.titulo}</b><br>
+              <span class="tag ${aviso.clase}">${aviso.texto}</span><br>
+              <button class="btn-success" onclick="marcar('${item.id}')">Hecho</button>
+            </div>
+          `;
+        }
+      }
+
+      hoy.innerHTML = hoyHTML || "Nada hoy";
+      proximos.innerHTML = proximosHTML || "Nada en próximos días";
+      agenda.innerHTML = agendaHTML || "Sin datos";
+      urgentes.innerHTML = urgentesHTML || "Nada urgente";
+      avisosAutomaticos.innerHTML = avisosHTML || "Sin avisos automáticos";
+
+      renderResumen(pendientes, hechas, hoyCount, semanaCount, urgentesCount, retrasadasCount);
+      const cargaAlta = renderCargaSemanal(semanaCount, retrasadasCount);
+      renderSugerencia(pendientes, hoyCount, semanaCount, urgentesCount, retrasadasCount, cargaAlta);
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        mostrarApp(user.email);
+        await cargar();
+      } else {
+        currentUser = null;
+        mostrarLogin("");
+      }
+    });
+  </script>
+</body>
+</html>
