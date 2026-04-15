@@ -1,1 +1,425 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oxkio</title>
+
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="favicon.png">
+  <meta name="theme-color" content="#020617">
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <style>
+    body{
+      margin:0;
+      background:#020617;
+      color:white;
+      font-family:Arial,sans-serif;
+    }
+    .container{
+      max-width:430px;
+      margin:0 auto;
+      padding:20px;
+    }
+    .logo{
+      width:96px;
+      height:96px;
+      border-radius:22px;
+      margin-bottom:12px;
+      object-fit:cover;
+      background:#111827;
+      display:block;
+    }
+    .title{
+      font-size:42px;
+      font-weight:700;
+      margin:0 0 20px 0;
+    }
+    .card{
+      background:#0f172a;
+      padding:20px;
+      border-radius:20px;
+      margin-bottom:20px;
+      box-shadow:0 8px 24px rgba(0,0,0,.18);
+    }
+    input, select, textarea{
+      width:100%;
+      box-sizing:border-box;
+      padding:14px;
+      border-radius:14px;
+      border:none;
+      margin-bottom:12px;
+      font-size:16px;
+      background:#f8fafc;
+      color:#111827;
+    }
+    textarea{
+      min-height:96px;
+      resize:vertical;
+    }
+    button{
+      padding:12px 18px;
+      border-radius:14px;
+      border:none;
+      font-weight:700;
+      cursor:pointer;
+      margin:6px 8px 0 0;
+      font-size:16px;
+    }
+    .btn-primary{ background:#2563eb; color:white; }
+    .btn-secondary{ background:#334155; color:white; }
+    .btn-danger{ background:#dc2626; color:white; }
+    .btn-success{ background:#16a34a; color:white; }
+    .btn-voice{ background:#7c3aed; color:white; }
+    .section-title{
+      font-size:22px;
+      margin:0 0 14px 0;
+      font-weight:700;
+    }
+    .task{
+      padding:14px 0;
+      border-bottom:1px solid #334155;
+    }
+    .task:last-child{
+      border-bottom:none;
+    }
+    .done{
+      text-decoration:line-through;
+      opacity:.55;
+    }
+    .tag{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:12px;
+      margin-top:6px;
+      margin-right:6px;
+      font-size:13px;
+      background:#1e293b;
+      color:#cbd5e1;
+      word-break:break-word;
+    }
+    .tag-red{
+      background:#7f1d1d;
+      color:#fecaca;
+    }
+    .tag-orange{
+      background:#78350f;
+      color:#fde68a;
+    }
+    .tag-blue{
+      background:#1e3a8a;
+      color:#dbeafe;
+    }
+    .tag-green{
+      background:#14532d;
+      color:#dcfce7;
+    }
+    .msg{
+      color:#cbd5e1;
+      margin-top:10px;
+      line-height:1.5;
+    }
+    .subtle{
+      color:#94a3b8;
+      font-size:14px;
+      margin-top:4px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-top:12px;
+    }
+    .mini{
+      background:#111827;
+      border-radius:16px;
+      padding:14px;
+    }
+    .mini .num{
+      font-size:30px;
+      font-weight:700;
+      margin-bottom:4px;
+    }
+    .mini .label{
+      color:#cbd5e1;
+    }
+    .mono{
+      font-family:monospace;
+      font-size:13px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .collapsible{
+      cursor:pointer;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      user-select:none;
+      margin-bottom:0;
+    }
+    .collapsible::after{
+      content:"▼";
+      font-size:12px;
+      opacity:.7;
+    }
+    .collapsible.active::after{
+      content:"▲";
+    }
+    .content-hidden{
+      display:none;
+    }
+    .compact-gap{
+      margin-top:14px;
+    }
+    .voice-status{
+      margin-top:10px;
+      color:#c4b5fd;
+    }
+    #loading{
+      display:block;
+    }
+    #loginBox,
+    #app{
+      display:none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="logo.png" class="logo" alt="Oxkio logo">
+    <div class="title">Oxkio</div>
+
+    <div id="loading" class="card">
+      <div class="section-title">Cargando</div>
+      <div class="msg">Comprobando acceso...</div>
+    </div>
+
+    <div id="loginBox" class="card">
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Contraseña">
+      <button class="btn-primary" onclick="login()">Entrar</button>
+      <button class="btn-secondary" onclick="register()">Registro</button>
+      <div id="loginMsg" class="msg"></div>
+    </div>
+
+    <div id="app">
+      <div class="card">
+        <div id="userEmail" class="msg" style="margin-top:0;"></div>
+        <button class="btn-danger" onclick="logout()">Salir</button>
+        <button class="btn-secondary" onclick="toggleConfig()">Configuración</button>
+        <button class="btn-primary" onclick="toggleModoCEO()">Modo CEO</button>
+        <button class="btn-voice" onclick="iniciarVoz()">Hablar con Oxkio</button>
+        <div id="voiceStatus" class="voice-status">Voz en espera.</div>
+        <div id="oxkioRespuesta" class="msg">Oxkio listo.</div>
+      </div>
+
+      <div id="configBox" class="card content-hidden">
+        <div class="section-title">Configuración CEO</div>
+        <input id="carpetaDocs" placeholder="Ruta o carpeta de documentos">
+        <select id="usoCorreo">
+          <option value="no">No usar correo</option>
+          <option value="si">Usar correo</option>
+        </select>
+        <input id="emailPrincipal" placeholder="Correo principal de trabajo">
+        <select id="usoCalendario">
+          <option value="no">No usar calendario externo</option>
+          <option value="si">Usar calendario externo</option>
+        </select>
+        <select id="controlDocs">
+          <option value="no">Sin control documental</option>
+          <option value="si">Control de renovaciones</option>
+        </select>
+        <textarea id="notaCEO" placeholder="Notas de uso real para Oxkio"></textarea>
+        <button class="btn-primary" onclick="guardarConfigCEO()">Guardar configuración CEO</button>
+        <button class="btn-danger" onclick="resetApp()">Reiniciar entorno de pruebas</button>
+        <div id="configMsg" class="msg"></div>
+      </div>
+
+      <div id="controlCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('controlContent', this)">
+          Centro de control Oxkio
+        </div>
+        <div id="controlContent" class="content-hidden compact-gap">
+          <input id="nuevaRegla" placeholder="Escribe una regla permanente">
+          <button class="btn-primary" onclick="guardarReglaManual()">Guardar regla</button>
+
+          <input id="nuevaIncidencia" placeholder="Describe una incidencia detectada">
+          <button class="btn-secondary" onclick="guardarIncidenciaManual()">Registrar incidencia</button>
+
+          <button class="btn-secondary" onclick="cargarIncidencias()">Ver incidencias</button>
+          <button class="btn-secondary" onclick="cargarReglas()">Ver reglas</button>
+          <button class="btn-secondary" onclick="cargarBitacora()">Ver aprendizaje</button>
+
+          <div id="controlContenido" class="msg">Sin datos todavía.</div>
+        </div>
+      </div>
+
+      <div id="resumenCard" class="card">
+        <div class="section-title collapsible active" onclick="toggleSection('resumenContent', this)">
+          Resumen automático
+        </div>
+        <div id="resumenContent" class="compact-gap">
+          <div id="resumenTexto" class="msg">Cargando resumen...</div>
+          <div class="grid">
+            <div class="mini">
+              <div class="num" id="numHoy">0</div>
+              <div class="label">Hoy</div>
+            </div>
+            <div class="mini">
+              <div class="num" id="numSemana">0</div>
+              <div class="label">Semana</div>
+            </div>
+            <div class="mini">
+              <div class="num" id="numUrgente">0</div>
+              <div class="label">Urgentes</div>
+            </div>
+            <div class="mini">
+              <div class="num" id="numHechas">0</div>
+              <div class="label">Realizadas</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sugerenciaCard" class="card">
+        <div class="section-title collapsible active" onclick="toggleSection('sugerenciaContent', this)">
+          Sugerencia Oxkio
+        </div>
+        <div id="sugerenciaContent" class="compact-gap">
+          <div id="sugerencia" class="msg">Preparando sugerencia...</div>
+        </div>
+      </div>
+
+      <div id="urgentesCard" class="card">
+        <div class="section-title collapsible active" onclick="toggleSection('urgentesContent', this)">
+          Atención inmediata
+        </div>
+        <div id="urgentesContent" class="compact-gap">
+          <div id="urgentes">Nada urgente</div>
+        </div>
+      </div>
+
+      <div id="hoyCard" class="card">
+        <div class="section-title collapsible active" onclick="toggleSection('hoyContent', this)">
+          Hoy
+        </div>
+        <div id="hoyContent" class="compact-gap">
+          <div id="hoy">Nada hoy</div>
+        </div>
+      </div>
+
+      <div id="renovacionesCard" class="card">
+        <div class="section-title collapsible active" onclick="toggleSection('renovacionesContent', this)">
+          Renovaciones y vencimientos
+        </div>
+        <div id="renovacionesContent" class="compact-gap">
+          <div id="renovaciones">Sin renovaciones detectadas</div>
+        </div>
+      </div>
+
+      <div id="entradaRapidaCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('entradaRapidaContent', this)">
+          Entrada rápida
+        </div>
+        <div id="entradaRapidaContent" class="content-hidden compact-gap">
+          <input id="entradaRapida" placeholder="Ej: Llamar cliente mañana o Factura luz 15042026">
+          <button class="btn-primary" onclick="procesarEntrada()">Añadir rápido</button>
+          <div class="subtle">Oxkio interpreta fecha rápida y crea el evento.</div>
+        </div>
+      </div>
+
+      <div id="nuevoEventoCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('nuevoEventoContent', this)">
+          Nuevo evento
+        </div>
+        <div id="nuevoEventoContent" class="content-hidden compact-gap">
+          <input id="titulo" placeholder="Título">
+          <input id="fecha" placeholder="DD/MM/AAAA o 13042026" inputmode="numeric" maxlength="10">
+          <input id="tipo" placeholder="Tipo">
+
+          <select id="recurrencia">
+            <option value="ninguna">Sin recurrencia</option>
+            <option value="semanal">Semanal</option>
+            <option value="mensual">Mensual</option>
+            <option value="anual">Anual</option>
+          </select>
+
+          <select id="recordatorio">
+            <option value="0">Avisar el mismo día</option>
+            <option value="1">Avisar 1 día antes</option>
+            <option value="3">Avisar 3 días antes</option>
+            <option value="7">Avisar 7 días antes</option>
+            <option value="30">Avisar 30 días antes</option>
+          </select>
+
+          <select id="categoriaAviso">
+            <option value="auto">Prioridad automática Oxkio</option>
+            <option value="importante">Importante</option>
+            <option value="normal">Normal</option>
+            <option value="baja">Baja</option>
+          </select>
+
+          <button class="btn-primary" onclick="guardar()">Guardar</button>
+          <div id="agendaMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div id="docsUploadCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('docsUploadContent', this)">
+          Subir documento
+        </div>
+        <div id="docsUploadContent" class="content-hidden compact-gap">
+          <input id="fileInput" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.md,.csv,.json,.doc,.docx">
+          <input id="uploadCategoria" placeholder="Categoría sugerida automática" readonly>
+          <input id="uploadCarpeta" placeholder="Carpeta sugerida" readonly>
+          <textarea id="uploadNotas" placeholder="Notas automáticas del documento" readonly></textarea>
+          <button class="btn-primary" onclick="procesarDocumento()">Procesar documento</button>
+          <div id="uploadMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div id="docsCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('docsManualContent', this)">
+          Nuevo documento manual
+        </div>
+        <div id="docsManualContent" class="content-hidden compact-gap">
+          <input id="docNombre" placeholder="Nombre del documento">
+          <input id="docTipo" placeholder="Tipo (DNI, contrato, factura, licencia...)">
+          <input id="docVence" placeholder="Fecha de vencimiento DD/MM/AAAA (opcional)" inputmode="numeric" maxlength="10">
+          <input id="docRuta" placeholder="Ruta o enlace del documento">
+          <input id="docCarpeta" placeholder="Carpeta sugerida o final">
+          <textarea id="docNotas" placeholder="Notas o contenido resumido del documento"></textarea>
+          <button class="btn-primary" onclick="guardarDocumento()">Guardar documento</button>
+          <div id="docMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div id="docResumenCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('docResumenContent', this)">
+          Resumen documental
+        </div>
+        <div id="docResumenContent" class="content-hidden compact-gap">
+          <div id="docResumenTexto" class="msg">Cargando resumen documental...</div>
+          <div class="grid">
+            <div class="mini">
+              <div class="num" id="numDocs">0</div>
+              <div class="label">Documentos</div>
+            </div>
+            <div class="mini">
+              <div class="num" id="numVencen">0</div>
+              <div class="label">Próximos a vencer</div>
+            </div>
+            <div class="mini">
+              <div class="num" id="numVencidos">0</div>
+              <div class="label">Vencidos</div>
+            </div>
+            <div class="mini">
+              <div class="num" id="numSinVence">0</div>
+              <div class="label">Sin vencimiento</div>
+            </div>
+          </div>
+        </div>
+      </div>
