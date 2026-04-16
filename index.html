@@ -1992,7 +1992,7 @@
         showApp(u.email);
         await cargar();
         await cargarConfigCEO();
-        setOxkioRespuesta("Oxkio activo. Puedes escribir o hablar.");
+        mostrarEstadoSeguridad();
       } else {
         currentUser = null;
         showLogin("");
