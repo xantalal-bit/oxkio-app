@@ -12,3 +12,447 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Oxkio">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+    body{margin:0;background:#020617;color:white;font-family:Arial,sans-serif;}
+    .container{max-width:430px;margin:0 auto;padding:20px 20px 110px 20px;}
+    .logo{width:96px;height:96px;border-radius:22px;margin-bottom:12px;object-fit:cover;background:#111827;display:block;}
+    .title{font-size:42px;font-weight:700;margin:0 0 20px 0;}
+    .card{background:#0f172a;padding:20px;border-radius:20px;margin-bottom:20px;box-shadow:0 8px 24px rgba(0,0,0,.18);}
+    input,select,textarea{width:100%;box-sizing:border-box;padding:14px;border-radius:14px;border:none;margin-bottom:12px;font-size:16px;background:#f8fafc;color:#111827;}
+    textarea{min-height:96px;resize:vertical;}
+    button{padding:12px 18px;border-radius:14px;border:none;font-weight:700;cursor:pointer;margin:6px 8px 0 0;font-size:16px;}
+    .btn-primary{background:#2563eb;color:white;}
+    .btn-secondary{background:#334155;color:white;}
+    .btn-danger{background:#dc2626;color:white;}
+    .btn-success{background:#16a34a;color:white;}
+    .btn-voice{background:#7c3aed;color:white;}
+    .section-title{font-size:22px;margin:0 0 14px 0;font-weight:700;}
+    .task{padding:14px 0;border-bottom:1px solid #334155;}
+    .task:last-child{border-bottom:none;}
+    .done{text-decoration:line-through;opacity:.55;}
+    .tag{display:inline-block;padding:6px 10px;border-radius:12px;margin-top:6px;margin-right:6px;font-size:13px;background:#1e293b;color:#cbd5e1;word-break:break-word;}
+    .tag-red{background:#7f1d1d;color:#fecaca;}
+    .tag-orange{background:#78350f;color:#fde68a;}
+    .tag-blue{background:#1e3a8a;color:#dbeafe;}
+    .tag-green{background:#14532d;color:#dcfce7;}
+    .msg{color:#cbd5e1;margin-top:10px;line-height:1.5;}
+    .subtle{color:#94a3b8;font-size:14px;margin-top:4px;}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px;}
+    .mini{background:#111827;border-radius:16px;padding:14px;}
+    .mini .num{font-size:30px;font-weight:700;margin-bottom:4px;}
+    .mini .label{color:#cbd5e1;}
+    .mono{font-family:monospace;font-size:13px;white-space:pre-wrap;word-break:break-word;}
+    .collapsible{cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;margin-bottom:0;}
+    .collapsible::after{content:"▼";font-size:12px;opacity:.7;}
+    .collapsible.active::after{content:"▲";}
+    .content-hidden{display:none;}
+    .compact-gap{margin-top:14px;}
+    .voice-status{margin-top:10px;color:#c4b5fd;}
+    #loading{display:block;}
+    #loginBox,#app{display:none;}
+    .floating-voice{position:fixed;right:20px;bottom:20px;width:68px;height:68px;border-radius:999px;border:none;background:#7c3aed;color:white;font-size:28px;font-weight:700;box-shadow:0 12px 28px rgba(0,0,0,.35);z-index:9999;display:none;margin:0;padding:0;}
+    .floating-voice.listening{background:#16a34a;transform:scale(1.04);}
+    .version-badge{display:inline-block;background:#1e3a8a;color:#93c5fd;font-size:11px;padding:3px 8px;border-radius:8px;margin-left:8px;vertical-align:middle;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="logo.png" class="logo" alt="Oxkio logo">
+    <div class="title">Oxkio <span class="version-badge">v1.1</span></div>
+
+    <div id="loading" class="card">
+      <div class="section-title">Cargando</div>
+      <div class="msg">Comprobando acceso...</div>
+    </div>
+
+    <div id="loginBox" class="card">
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Contraseña">
+      <button class="btn-primary" onclick="login()">Entrar</button>
+      <button class="btn-secondary" onclick="register()">Registro</button>
+      <div id="loginMsg" class="msg"></div>
+    </div>
+
+    <div id="app">
+      <div class="card">
+        <div id="userEmail" class="msg" style="margin-top:0;"></div>
+        <button class="btn-danger" onclick="logout()">Salir</button>
+        <button class="btn-secondary" onclick="toggleConfig()">Configuración</button>
+        <button class="btn-primary" onclick="toggleModoCEO()">Modo CEO</button>
+        <button class="btn-voice" onclick="iniciarVoz()">Hablar con Oxkio</button>
+        <div id="voiceStatus" class="voice-status">Voz en espera.</div>
+        <div id="oxkioRespuesta" class="msg">Oxkio listo.</div>
+      </div>
+
+      <div id="configBox" class="card content-hidden">
+        <div class="section-title">Configuración CEO</div>
+        <input id="carpetaDocs" placeholder="Ruta o carpeta de documentos">
+        <select id="usoCorreo">
+          <option value="no">No usar correo</option>
+          <option value="si">Usar correo</option>
+        </select>
+        <input id="emailPrincipal" placeholder="Correo principal de trabajo">
+        <select id="usoCalendario">
+          <option value="no">No usar calendario externo</option>
+          <option value="si">Usar calendario externo</option>
+        </select>
+        <select id="controlDocs">
+          <option value="no">Sin control documental</option>
+          <option value="si">Control de renovaciones</option>
+        </select>
+        <textarea id="notaCEO" placeholder="Notas de uso real para Oxkio"></textarea>
+        <button class="btn-primary" onclick="guardarConfigCEO()">Guardar configuración CEO</button>
+        <button class="btn-danger" onclick="resetApp()">Reiniciar entorno de pruebas</button>
+        <div id="configMsg" class="msg"></div>
+      </div>
+
+      <div id="controlCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('controlContent',this)">Centro de control Oxkio</div>
+        <div id="controlContent" class="content-hidden compact-gap">
+          <input id="nuevaRegla" placeholder="Escribe una regla permanente">
+          <button class="btn-primary" onclick="guardarReglaManual()">Guardar regla</button>
+          <input id="nuevaIncidencia" placeholder="Describe una incidencia detectada">
+          <button class="btn-secondary" onclick="guardarIncidenciaManual()">Registrar incidencia</button>
+          <button class="btn-secondary" onclick="cargarIncidencias()">Ver incidencias</button>
+          <button class="btn-secondary" onclick="cargarReglas()">Ver reglas</button>
+          <button class="btn-secondary" onclick="cargarBitacora()">Ver aprendizaje</button>
+          <button class="btn-secondary" onclick="analizarSistema()">Analizar sistema</button>
+          <div id="controlContenido" class="msg">Sin datos todavía.</div>
+        </div>
+      </div>
+
+      <div id="resumenCard" class="card">
+        <div class="section-title collapsible active" onclick="toggleSection('resumenContent',this)">Resumen automático</div>
+        <div id="resumenContent" class="compact-gap">
+          <div id="resumenTexto" class="msg">Cargando resumen...</div>
+          <div class="grid">
+            <div class="mini"><div class="num" id="numHoy">0</div><div class="label">Hoy</div></div>
+            <div class="mini"><div class="num" id="numSemana">0</div><div class="label">Semana</div></div>
+            <div class="mini"><div class="num" id="numUrgente">0</div><div class="label">Urgentes</div></div>
+            <div class="mini"><div class="num" id="numHechas">0</div><div class="label">Realizadas</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sugerenciaCard" class="card">
+        <div class="section-title collapsible active" onclick="toggleSection('sugerenciaContent',this)">Sugerencia Oxkio</div>
+        <div id="sugerenciaContent" class="compact-gap">
+          <div id="sugerencia" class="msg">Preparando sugerencia...</div>
+        </div>
+      </div>
+
+      <div id="urgentesCard" class="card">
+        <div class="section-title collapsible active" onclick="toggleSection('urgentesContent',this)">Atención inmediata</div>
+        <div id="urgentesContent" class="compact-gap">
+          <div id="urgentes">Nada urgente</div>
+        </div>
+      </div>
+
+      <div id="hoyCard" class="card">
+        <div class="section-title collapsible active" onclick="toggleSection('hoyContent',this)">Hoy</div>
+        <div id="hoyContent" class="compact-gap">
+          <div id="hoy">Nada hoy</div>
+        </div>
+      </div>
+
+      <div id="renovacionesCard" class="card">
+        <div class="section-title collapsible active" onclick="toggleSection('renovacionesContent',this)">Renovaciones y vencimientos</div>
+        <div id="renovacionesContent" class="compact-gap">
+          <div id="renovaciones">Sin renovaciones detectadas</div>
+        </div>
+      </div>
+
+      <div id="entradaRapidaCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('entradaRapidaContent',this)">Entrada rápida</div>
+        <div id="entradaRapidaContent" class="content-hidden compact-gap">
+          <input id="entradaRapida" placeholder="Ej: Llamar cliente mañana o Factura luz 15042026">
+          <button class="btn-primary" onclick="procesarEntrada()">Añadir rápido</button>
+          <div class="subtle">Oxkio interpreta fecha rápida y crea el evento.</div>
+        </div>
+      </div>
+
+      <div id="nuevoEventoCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('nuevoEventoContent',this)">Nuevo evento</div>
+        <div id="nuevoEventoContent" class="content-hidden compact-gap">
+          <input id="titulo" placeholder="Título">
+          <input id="fecha" placeholder="DD/MM/AAAA o 13042026" inputmode="numeric" maxlength="10">
+          <input id="tipo" placeholder="Tipo">
+          <select id="recurrencia">
+            <option value="ninguna">Sin recurrencia</option>
+            <option value="semanal">Semanal</option>
+            <option value="mensual">Mensual</option>
+            <option value="anual">Anual</option>
+          </select>
+          <select id="recordatorio">
+            <option value="0">Avisar el mismo día</option>
+            <option value="1">Avisar 1 día antes</option>
+            <option value="3">Avisar 3 días antes</option>
+            <option value="7">Avisar 7 días antes</option>
+            <option value="30">Avisar 30 días antes</option>
+          </select>
+          <select id="categoriaAviso">
+            <option value="auto">Prioridad automática Oxkio</option>
+            <option value="importante">Importante</option>
+            <option value="normal">Normal</option>
+            <option value="baja">Baja</option>
+          </select>
+          <button class="btn-primary" onclick="guardar()">Guardar</button>
+          <div id="agendaMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div id="docsUploadCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('docsUploadContent',this)">Subir documento</div>
+        <div id="docsUploadContent" class="content-hidden compact-gap">
+          <input id="fileInput" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.md,.csv,.json,.doc,.docx">
+          <input id="uploadCategoria" placeholder="Categoría sugerida automática" readonly>
+          <input id="uploadCarpeta" placeholder="Carpeta sugerida" readonly>
+          <textarea id="uploadNotas" placeholder="Notas automáticas del documento" readonly></textarea>
+          <button class="btn-primary" onclick="procesarDocumento()">Procesar documento</button>
+          <div id="uploadMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div id="docsCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('docsManualContent',this)">Nuevo documento manual</div>
+        <div id="docsManualContent" class="content-hidden compact-gap">
+          <input id="docNombre" placeholder="Nombre del documento">
+          <input id="docTipo" placeholder="Tipo (DNI, contrato, factura, licencia...)">
+          <input id="docVence" placeholder="Fecha de vencimiento DD/MM/AAAA (opcional)" inputmode="numeric" maxlength="10">
+          <input id="docRuta" placeholder="Ruta o enlace del documento">
+          <input id="docCarpeta" placeholder="Carpeta sugerida o final">
+          <textarea id="docNotas" placeholder="Notas o contenido resumido del documento"></textarea>
+          <button class="btn-primary" onclick="guardarDocumento()">Guardar documento</button>
+          <div id="docMsg" class="msg"></div>
+        </div>
+      </div>
+
+      <div id="docResumenCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('docResumenContent',this)">Resumen documental</div>
+        <div id="docResumenContent" class="content-hidden compact-gap">
+          <div id="docResumenTexto" class="msg">Cargando resumen documental...</div>
+          <div class="grid">
+            <div class="mini"><div class="num" id="numDocs">0</div><div class="label">Documentos</div></div>
+            <div class="mini"><div class="num" id="numVencen">0</div><div class="label">Próximos a vencer</div></div>
+            <div class="mini"><div class="num" id="numVencidos">0</div><div class="label">Vencidos</div></div>
+            <div class="mini"><div class="num" id="numSinVence">0</div><div class="label">Sin vencimiento</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="docsListaCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('docsListaContent',this)">Lista documental</div>
+        <div id="docsListaContent" class="content-hidden compact-gap">
+          <div id="docsLista">Sin documentos</div>
+        </div>
+      </div>
+
+      <div id="correoCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('correoContent',this)">Correo</div>
+        <div id="correoContent" class="content-hidden compact-gap">
+          <div id="correoResumen" class="msg">Correo no configurado todavía.</div>
+        </div>
+      </div>
+
+      <div id="cargaCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('cargaContent',this)">Carga semanal</div>
+        <div id="cargaContent" class="content-hidden compact-gap">
+          <div id="cargaSemanal" class="msg">Analizando carga...</div>
+        </div>
+      </div>
+
+      <div id="avisosCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('avisosContent',this)">Avisos automáticos</div>
+        <div id="avisosContent" class="content-hidden compact-gap">
+          <div class="subtle">Según la anticipación definida en cada evento</div>
+          <div id="avisosAutomaticos" class="msg">Cargando avisos...</div>
+        </div>
+      </div>
+
+      <div id="proximosCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('proximosContent',this)">Próximos días</div>
+        <div id="proximosContent" class="content-hidden compact-gap">
+          <div id="proximos">Nada en próximos días</div>
+        </div>
+      </div>
+
+      <div id="agendaCard" class="card">
+        <div class="section-title collapsible" onclick="toggleSection('agendaContent',this)">Agenda completa</div>
+        <div id="agendaContent" class="content-hidden compact-gap">
+          <div id="agenda">Sin datos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button id="floatingVoiceBtn" class="floating-voice" title="Hablar con Oxkio">🎤</button>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDFySiO23mqJilJPUfE-dLv9Zbs9gcY_kg",
+      authDomain: "oxkio-9af40.firebaseapp.com",
+      projectId: "oxkio-9af40",
+      storageBucket: "oxkio-9af40.firebasestorage.app",
+      messagingSenderId: "975887789346",
+      appId: "1:975887789346:web:fa581107285b989d90897b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser=null, modoCEO=false, recognition=null, escuchando=false;
+
+    const loadingBox=document.getElementById("loading");
+    const loginBox=document.getElementById("loginBox");
+    const appBox=document.getElementById("app");
+    const loginMsg=document.getElementById("loginMsg");
+    const agendaMsg=document.getElementById("agendaMsg");
+    const userEmail=document.getElementById("userEmail");
+    const configBox=document.getElementById("configBox");
+    const configMsg=document.getElementById("configMsg");
+    const fechaInput=document.getElementById("fecha");
+    const docVenceInput=document.getElementById("docVence");
+    const voiceStatus=document.getElementById("voiceStatus");
+    const oxkioRespuesta=document.getElementById("oxkioRespuesta");
+    const floatingVoiceBtn=document.getElementById("floatingVoiceBtn");
+
+    function showLoading(){loadingBox.style.display="block";loginBox.style.display="none";appBox.style.display="none";floatingVoiceBtn.style.display="none";}
+    function showLogin(msg=""){loadingBox.style.display="none";loginBox.style.display="block";appBox.style.display="none";floatingVoiceBtn.style.display="none";loginMsg.textContent=msg;}
+    function showApp(email){loadingBox.style.display="none";loginBox.style.display="none";appBox.style.display="block";floatingVoiceBtn.style.display="block";userEmail.textContent=email;}
+    function setOxkioRespuesta(texto){oxkioRespuesta.textContent=texto;}
+    function setEstadoVoz(texto,activa=false){voiceStatus.textContent=texto;if(activa)floatingVoiceBtn.classList.add("listening");else floatingVoiceBtn.classList.remove("listening");}
+
+    function toggleSection(id,header){const el=document.getElementById(id);if(!el)return;el.classList.toggle("content-hidden");if(header)header.classList.toggle("active");}
+    window.toggleSection=toggleSection;
+    function openSection(id){const el=document.getElementById(id);if(!el)return;el.classList.remove("content-hidden");const h=el.parentElement.querySelector(".collapsible");if(h)h.classList.add("active");}
+    function closeSection(id){const el=document.getElementById(id);if(!el)return;el.classList.add("content-hidden");const h=el.parentElement.querySelector(".collapsible");if(h)h.classList.remove("active");}
+
+    function autoFormatFecha(v){const l=(v||"").replace(/\D/g,"").slice(0,8);let o="";if(l.length>0)o+=l.slice(0,2);if(l.length>=3)o+="/"+l.slice(2,4);if(l.length>=5)o+="/"+l.slice(4,8);return o;}
+    fechaInput.addEventListener("input",(e)=>{e.target.value=autoFormatFecha(e.target.value);});
+    docVenceInput.addEventListener("input",(e)=>{e.target.value=autoFormatFecha(e.target.value);});
+
+    function parseFecha(str){if(!str)return null;const p=str.split("/");if(p.length!==3)return null;const d=parseInt(p[0],10),m=parseInt(p[1],10)-1,y=parseInt(p[2],10);const f=new Date(y,m,d);if(f.getFullYear()!==y||f.getMonth()!==m||f.getDate()!==d)return null;f.setHours(0,0,0,0);return f;}
+    function formatFecha(d){return`${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;}
+    function todayDate(){const h=new Date();h.setHours(0,0,0,0);return h;}
+    function diasHasta(f){return Math.round((f-todayDate())/86400000);}
+    function addDays(date,days){const d=new Date(date);d.setDate(d.getDate()+days);d.setHours(0,0,0,0);return d;}
+    function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
+    function buildMonthlyDate(y,m,day){return new Date(y,m,Math.min(day,daysInMonth(y,m)));}
+
+    function getNextOccurrence(item){
+      const base=parseFecha(item.fecha);if(!base)return null;
+      const today=todayDate();const rec=item.recurrencia||"ninguna";
+      if(rec==="ninguna")return base;
+      if(rec==="semanal"){let n=new Date(base);while(n<today)n=addDays(n,7);return n;}
+      if(rec==="mensual"){let y=today.getFullYear(),m=today.getMonth();const bd=base.getDate();let n=buildMonthlyDate(y,m,bd);if(n<today){m+=1;if(m>11){m=0;y+=1;}n=buildMonthlyDate(y,m,bd);}n.setHours(0,0,0,0);return n;}
+      if(rec==="anual"){let y=today.getFullYear();const m=base.getMonth(),d=base.getDate();let n=buildMonthlyDate(y,m,d);if(n<today){y+=1;n=buildMonthlyDate(y,m,d);}n.setHours(0,0,0,0);return n;}
+      return base;
+    }
+
+    function occurrenceKey(d){return formatFecha(d);}
+    function isDoneCurrentOccurrence(item,occ){if(!occ)return false;const rec=item.recurrencia||"ninguna";if(rec==="ninguna")return item.estado==="hecho";return item.lastDoneOccurrence===occurrenceKey(occ);}
+    function recurrenciaTexto(r){if(r==="semanal")return"Semanal";if(r==="mensual")return"Mensual";if(r==="anual")return"Anual";return"Único";}
+    function tagAviso(d){if(d<0)return{texto:"Vencido / retrasado",clase:"tag-red"};if(d===0)return{texto:"Hoy",clase:"tag-red"};if(d===1)return{texto:"Mañana",clase:"tag-orange"};if(d<=3)return{texto:`En ${d} días`,clase:"tag-orange"};if(d<=7)return{texto:`En ${d} días`,clase:"tag-blue"};if(d===30)return{texto:"En 30 días",clase:"tag-blue"};return{texto:"Pendiente",clase:"tag-blue"};}
+    function tagPrioridad(d,done,cat){if(done)return{texto:"Realizado",clase:"tag-green"};if(d===null)return{texto:"Sin fecha válida",clase:"tag-blue"};if(d<0)return{texto:"Retrasado",clase:"tag-red"};if(d===0)return{texto:"Hoy",clase:"tag-red"};if(cat==="importante")return{texto:"Importante",clase:"tag-orange"};if(d===1)return{texto:"Mañana",clase:"tag-orange"};if(d<=3)return{texto:"Alta",clase:"tag-orange"};if(d<=7)return{texto:"Media",clase:"tag-blue"};return{texto:cat==="baja"?"Baja":"Pendiente",clase:"tag-blue"};}
+
+    function detectarCategoriaDocumento(n,m){n=(n||"").toLowerCase();m=(m||"").toLowerCase();if(n.includes("dni")||n.includes("pasaporte"))return"personal";if(n.includes("factura")||n.includes("invoice"))return"gasto";if(n.includes("contrato")||n.includes("acuerdo"))return"profesional";if(n.includes("seguro")||n.includes("itv")||n.includes("licencia"))return"renovación";if(m.includes("image/"))return"imagen";if(m.includes("pdf"))return"pdf";return"general";}
+    function sugerirCarpeta(t){if(t==="personal")return"personales";if(t==="profesional")return"profesionales";if(t==="gasto")return"gastos";if(t==="renovación")return"renovaciones";if(t==="imagen")return"entradas-imagen";if(t==="pdf")return"entradas-pdf";return"general";}
+    function esTextoLeible(m,n){m=(m||"").toLowerCase();n=(n||"").toLowerCase();return m.startsWith("text/")||n.endsWith(".txt")||n.endsWith(".md")||n.endsWith(".csv")||n.endsWith(".json");}
+    function extraerFechas(t){if(!t)return[];return[...new Set(t.match(/\b\d{2}\/\d{2}\/\d{4}\b/g)||[])];}
+    function generarRutaDrive(c,n){return`/${c||"general"}/${n}`;}
+
+    async function registrarIncidencia(tipo,desc){if(!currentUser||!desc)return;await addDoc(collection(db,"incidencias"),{user:currentUser.uid,tipo,descripcion:desc,estado:"pendiente",createdAt:Date.now()});}
+    async function registrarBitacora(texto){if(!currentUser||!texto)return;await addDoc(collection(db,"bitacora"),{user:currentUser.uid,texto,createdAt:Date.now()});}
+
+    window.guardarIncidenciaManual=async function(){const t=document.getElementById("nuevaIncidencia").value.trim();if(!t)return;await registrarIncidencia("manual",t);await registrarBitacora(`Incidencia: ${t}`);document.getElementById("nuevaIncidencia").value="";await cargarIncidencias();};
+    window.guardarReglaManual=async function(){const t=document.getElementById("nuevaRegla").value.trim();if(!t||!currentUser)return;await addDoc(collection(db,"reglas"),{user:currentUser.uid,texto:t,activa:true,createdAt:Date.now()});await registrarBitacora(`Regla: ${t}`);document.getElementById("nuevaRegla").value="";await cargarReglas();};
+
+    window.cargarIncidencias=async function(){if(!currentUser)return;openSection("controlContent");const q=query(collection(db,"incidencias"),where("user","==",currentUser.uid));const snap=await getDocs(q);const items=[];snap.forEach(d=>items.push(d.data()));items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));document.getElementById("controlContenido").innerHTML=items.map(i=>`<div class="task"><b>${i.tipo||"incidencia"}</b><br>${i.descripcion||""}<br><span class="tag tag-orange">${i.estado||"pendiente"}</span></div>`).join("")||"Sin incidencias";};
+    window.cargarReglas=async function(){if(!currentUser)return;openSection("controlContent");const q=query(collection(db,"reglas"),where("user","==",currentUser.uid));const snap=await getDocs(q);const items=[];snap.forEach(d=>items.push(d.data()));items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));document.getElementById("controlContenido").innerHTML=items.map(i=>`<div class="task">${i.texto||""}<br><span class="tag ${i.activa?"tag-green":"tag-red"}">${i.activa?"Activa":"Inactiva"}</span></div>`).join("")||"Sin reglas";};
+    window.cargarBitacora=async function(){if(!currentUser)return;openSection("controlContent");const q=query(collection(db,"bitacora"),where("user","==",currentUser.uid));const snap=await getDocs(q);const items=[];snap.forEach(d=>items.push(d.data()));items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));document.getElementById("controlContenido").innerHTML=items.map(i=>`<div class="task">${i.texto||""}</div>`).join("")||"Sin aprendizaje aún";};
+
+    window.analizarSistema=async function(){if(!currentUser)return;openSection("controlContent");let m=[];const qD=await getDocs(query(collection(db,"documentos"),where("user","==",currentUser.uid)));let sc=0;qD.forEach(d=>{const i=d.data();if(!i.carpeta||i.ruta==="pendiente de carpeta final")sc++;});if(sc>0)m.push(`${sc} documentos sin organizar.`);const qI=await getDocs(query(collection(db,"incidencias"),where("user","==",currentUser.uid)));if(qI.size>5)m.push("Muchas incidencias. Revisar flujo.");const qR=await getDocs(query(collection(db,"reglas"),where("user","==",currentUser.uid)));if(qR.size===0)m.push("Sin reglas definidas. Crear reglas base.");if(m.length===0)m.push("Sistema estable.");document.getElementById("controlContenido").innerHTML=m.map(x=>`<div class="task">${x}</div>`).join("");await registrarBitacora("Análisis ejecutado");setOxkioRespuesta("Análisis completado.");};
+
+    window.asignarCarpetaDocumento=async function(id,nombre){if(!currentUser)return;const nueva=prompt(`Carpeta para "${nombre}"`,"personales");if(!nueva)return;const ruta=generarRutaDrive(nueva,nombre);await updateDoc(doc(db,"documentos",id),{ruta,carpeta:nueva,estadoDrive:"ok"});await registrarBitacora(`Doc reasignado: ${nueva}`);await cargarListaDocs();await cargarRenovaciones();};
+
+    async function guardarEnDrive(id,nombre,carpeta){if(!currentUser)return;const ruta=generarRutaDrive(carpeta,nombre);await updateDoc(doc(db,"documentos",id),{ruta,carpeta,estadoDrive:"ok"});await registrarBitacora(`Drive: ${ruta}`);}
+    async function autoOrganizarDocumentos(){if(!currentUser)return;const q=query(collection(db,"documentos"),where("user","==",currentUser.uid));const snap=await getDocs(q);let c=0;for(const d of snap.docs){const i=d.data();if(i.ruta==="pendiente de carpeta final"||!i.ruta){await guardarEnDrive(d.id,i.nombre,i.carpeta||sugerirCarpeta(i.tipo));c++;}}setOxkioRespuesta(`Drive organizado. ${c} actualizados.`);}
+    async function verDrive(){if(!currentUser)return;const q=query(collection(db,"documentos"),where("user","==",currentUser.uid));const snap=await getDocs(q);let est={};snap.forEach(d=>{const i=d.data();const c=i.carpeta||"general";if(!est[c])est[c]=[];est[c].push(i.nombre);});let html="";for(const c in est){html+=`<div class="task"><b>📁 ${c}</b><br>`;est[c].forEach(f=>{html+=`— ${f}<br>`;});html+=`</div>`;}document.getElementById("docsLista").innerHTML=html||"Drive vacío";openSection("docsListaContent");}
+
+    function renderResumen(p,h,hoy,sem,urg,ret,ren){document.getElementById("numHoy").textContent=hoy;document.getElementById("numSemana").textContent=sem;document.getElementById("numUrgente").textContent=urg+ret+ren;document.getElementById("numHechas").textContent=h;let t="";if(ren>0)t=`${ren} renovación(es) requieren atención.`;else if(p===0)t="Sin pendientes. Buen momento para revisar.";else if(ret>0)t=`${ret} evento(s) retrasado(s).`;else if(urg>0)t=`${urg} urgente(s) entre hoy y mañana.`;else if(hoy>0)t=`${hoy} evento(s) hoy.`;else t=`${sem} evento(s) esta semana.`;document.getElementById("resumenTexto").textContent=t;}
+    function renderCargaSemanal(s,r){let t="";if(r>0)t="Semana condicionada por retrasos.";else if(s>=7)t="Carga alta. Repartir o adelantar.";else if(s>=4)t="Carga media. Ordenar prioridades.";else if(s>0)t="Carga controlada.";else t="Semana vacía. Ideal para planificar.";document.getElementById("cargaSemanal").textContent=t;return s>=7;}
+    function renderSugerencia(p,hoy,sem,urg,ret,ca,ren){let t="";if(ren>0)t="Revisar renovaciones primero.";else if(ret>0)t="Cerrar retrasados antes de nuevas cargas.";else if(urg>0)t="Resolver urgentes antes de abrir nuevas líneas.";else if(ca)t="Repartir semana: adelanta algo sencillo.";else if(hoy>0)t="Completar lo de hoy y preparar siguiente acción.";else if(sem>0)t="Revisar semana y adelantar un evento.";else if(p===0)t="Hueco libre: revisar docs, correo o captación.";else t="Revisar prioridades y fijar evento clave.";document.getElementById("sugerencia").textContent=t;}
+
+    function applyModoCEO(){const vis=["resumenCard","sugerenciaCard","renovacionesCard","urgentesCard","hoyCard"];const hid=["configBox","controlCard","entradaRapidaCard","nuevoEventoCard","docsUploadCard","docsCard","docResumenCard","docsListaCard","correoCard","cargaCard","avisosCard","proximosCard","agendaCard"];vis.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display="block";});if(modoCEO){hid.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display="none";});}else{hid.forEach(id=>{const el=document.getElementById(id);if(!el)return;if(id==="configBox")el.style.display="none";else el.style.display="block";});}}
+    window.toggleModoCEO=function(){modoCEO=!modoCEO;setOxkioRespuesta(modoCEO?"Modo CEO activado.":"Modo CEO desactivado.");applyModoCEO();};
+    window.toggleConfig=function(){if(modoCEO)return;configBox.classList.toggle("content-hidden");};
+
+    window.guardarConfigCEO=async function(){if(!currentUser)return;const q=query(collection(db,"config"),where("user","==",currentUser.uid));const snap=await getDocs(q);const data={user:currentUser.uid,carpeta:document.getElementById("carpetaDocs").value.trim(),correo:document.getElementById("usoCorreo").value,emailPrincipal:document.getElementById("emailPrincipal").value.trim(),calendario:document.getElementById("usoCalendario").value,docs:document.getElementById("controlDocs").value,notaCEO:document.getElementById("notaCEO").value.trim(),updatedAt:Date.now()};if(snap.empty)await addDoc(collection(db,"config"),data);else await updateDoc(doc(db,"config",snap.docs[0].id),data);configMsg.textContent="Configuración guardada.";await registrarBitacora("Config CEO actualizada.");await cargarCorreoResumen();};
+    async function cargarConfigCEO(){if(!currentUser)return;const q=query(collection(db,"config"),where("user","==",currentUser.uid));const snap=await getDocs(q);if(snap.empty)return;const d=snap.docs[0].data();document.getElementById("carpetaDocs").value=d.carpeta||"";document.getElementById("usoCorreo").value=d.correo||"no";document.getElementById("emailPrincipal").value=d.emailPrincipal||"";document.getElementById("usoCalendario").value=d.calendario||"no";document.getElementById("controlDocs").value=d.docs||"no";document.getElementById("notaCEO").value=d.notaCEO||"";}
+    async function cargarCorreoResumen(){const box=document.getElementById("correoResumen");if(!currentUser)return;const q=query(collection(db,"config"),where("user","==",currentUser.uid));const snap=await getDocs(q);if(snap.empty){box.textContent="Correo no configurado.";return;}const d=snap.docs[0].data();if(d.correo!=="si"){box.textContent="Correo desactivado.";return;}box.textContent=`Cuenta principal: ${d.emailPrincipal||"sin definir"}.`;}
+
+    window.procesarDocumento=async function(){if(!currentUser)return;const fi=document.getElementById("fileInput");const file=fi.files[0];const uploadMsg=document.getElementById("uploadMsg");if(!file){uploadMsg.textContent="Selecciona un archivo.";return;}uploadMsg.textContent="Analizando...";const cat=detectarCategoriaDocumento(file.name,file.type);const carp=sugerirCarpeta(cat);document.getElementById("uploadCategoria").value=cat;document.getElementById("uploadCarpeta").value=carp;let texto="",notas=`Archivo: ${file.name}\nTipo: ${file.type||"?"}\nTamaño: ${file.size} bytes\nCarpeta: ${carp}`;try{if(file.type.startsWith("image/")){uploadMsg.textContent="OCR...";const r=await Tesseract.recognize(file,"spa");texto=(r?.data?.text||"").trim();notas+="\nOCR completado.";}else if(esTextoLeible(file.type,file.name)){texto=await file.text();notas+="\nTexto leído.";}else if((file.type||"").includes("pdf")||file.name.toLowerCase().endsWith(".pdf")){notas+="\nPDF registrado.";}else{notas+="\nTipo registrado.";}}catch(e){notas+="\nError de lectura.";await registrarIncidencia("documentos",`Fallo: ${file.name}`);}const fechas=extraerFechas(texto);if(texto)notas+=`\n\n--- TEXTO ---\n${texto.substring(0,1500)}`;if(fechas.length>0)notas+=`\n\n--- FECHAS ---\n${fechas.join("\n")}`;document.getElementById("uploadNotas").value=notas;await addDoc(collection(db,"documentos"),{user:currentUser.uid,nombre:file.name,tipo:cat,carpeta:carp,vence:fechas[0]||"",ruta:generarRutaDrive(carp,file.name),estadoDrive:"ok",notas,mimeType:file.type||"",fileSize:file.size||0,createdAt:Date.now()});await registrarBitacora(`Doc procesado: ${file.name}`);fi.value="";uploadMsg.textContent="Guardado en Oxkio.";await cargarRenovaciones();await cargarDocsResumen();await cargarListaDocs();};
+
+    window.guardarDocumento=async function(){if(!currentUser)return;const nombre=document.getElementById("docNombre").value.trim();const tipo=document.getElementById("docTipo").value.trim();const vence=autoFormatFecha(document.getElementById("docVence").value);const ruta=document.getElementById("docRuta").value.trim();const carpeta=document.getElementById("docCarpeta").value.trim()||sugerirCarpeta(tipo);const notas=document.getElementById("docNotas").value.trim();document.getElementById("docVence").value=vence;if(!nombre||!tipo){document.getElementById("docMsg").textContent="Completa nombre y tipo.";return;}if(vence&&!parseFecha(vence)){document.getElementById("docMsg").textContent="Fecha no válida.";return;}await addDoc(collection(db,"documentos"),{user:currentUser.uid,nombre,tipo,carpeta,vence:vence||"",ruta:ruta||generarRutaDrive(carpeta,nombre),estadoDrive:ruta?"manual":"ok",notas,mimeType:"",fileSize:0,createdAt:Date.now()});await registrarBitacora(`Doc manual: ${nombre}`);["docNombre","docTipo","docVence","docRuta","docCarpeta","docNotas"].forEach(id=>document.getElementById(id).value="");document.getElementById("docMsg").textContent="Guardado.";await cargarRenovaciones();await cargarDocsResumen();await cargarListaDocs();};
+
+    async function cargarDocsResumen(){const q=query(collection(db,"documentos"),where("user","==",currentUser.uid));const snap=await getDocs(q);let tot=0,ven=0,vec=0,sin=0;snap.forEach(d=>{tot++;const i=d.data();if(!i.vence){sin++;return;}const f=parseFecha(i.vence);if(!f){sin++;return;}const d2=diasHasta(f);if(d2<0)vec++;else if(d2<=30)ven++;});document.getElementById("numDocs").textContent=tot;document.getElementById("numVencen").textContent=ven;document.getElementById("numVencidos").textContent=vec;document.getElementById("numSinVence").textContent=sin;document.getElementById("docResumenTexto").textContent=tot>0?`${tot} doc(s).${vec>0?" "+vec+" vencido(s).":""}${ven>0?" "+ven+" próximo(s).":""}` :"Sin documentación.";}
+
+    async function cargarRenovaciones(){const box=document.getElementById("renovaciones");if(!currentUser)return 0;const q=query(collection(db,"documentos"),where("user","==",currentUser.uid));const snap=await getDocs(q);const items=[];snap.forEach(d=>items.push({id:d.id,...d.data()}));items.sort((a,b)=>{const fa=parseFecha(a.vence||""),fb=parseFecha(b.vence||"");if(fa&&fb)return fa-fb;if(fa)return-1;if(fb)return 1;return 0;});let html="",count=0;for(const i of items){if(!i.vence)continue;const f=parseFecha(i.vence);if(!f)continue;const d=diasHasta(f);if(d<=30){count++;const t=tagAviso(d);html+=`<div class="task"><b>${i.nombre}</b><br>${i.tipo} - vence: ${i.vence}<br><span class="tag ${t.clase}">${t.texto}</span>${i.carpeta?`<span class="tag tag-blue">${i.carpeta}</span>`:""}</div>`;}}box.innerHTML=html||"Sin renovaciones detectadas";return count;}
+
+    async function cargarListaDocs(){const box=document.getElementById("docsLista");if(!currentUser)return;const q=query(collection(db,"documentos"),where("user","==",currentUser.uid));const snap=await getDocs(q);const items=[];snap.forEach(d=>items.push({id:d.id,...d.data()}));items.sort((a,b)=>{const fa=parseFecha(a.vence||""),fb=parseFecha(b.vence||"");if(fa&&fb)return fa-fb;return(a.createdAt||0)-(b.createdAt||0);});let html="";for(const i of items){let tag="";if(i.vence){const f=parseFecha(i.vence);if(f){const d=diasHasta(f);const av=tagAviso(d);tag=`<span class="tag ${av.clase}">${av.texto}</span>`;}}const pend=!i.ruta||i.ruta==="pendiente de carpeta final";html+=`<div class="task"><b>${i.nombre}</b><br>${i.tipo}${i.vence?" - vence: "+i.vence:""}<br>${tag}${i.carpeta?`<span class="tag tag-blue">📁 ${i.carpeta}</span>`:""}${i.ruta&&!pend?`<span class="tag tag-blue">${i.ruta}</span>`:""}${pend?`<br><button class="btn-secondary" onclick="asignarCarpetaDocumento('${i.id}','${String(i.nombre).replace(/'/g,"\\'")}')">Asignar carpeta</button>`:""}${i.notas?`<div class="msg mono">${i.notas}</div>`:""}</div>`;}box.innerHTML=html||"Sin documentos";}
+
+    window.login=async function(){const e=document.getElementById("email").value.trim(),p=document.getElementById("password").value.trim();if(!e||!p){showLogin("Escribe email y contraseña.");return;}try{await signInWithEmailAndPassword(auth,e,p);}catch{showLogin("Email o contraseña incorrectos.");}};
+    window.register=async function(){const e=document.getElementById("email").value.trim(),p=document.getElementById("password").value.trim();if(!e||!p){showLogin("Escribe email y contraseña.");return;}if(p.length<6){showLogin("Mínimo 6 caracteres.");return;}try{await createUserWithEmailAndPassword(auth,e,p);}catch(err){showLogin(err.code==="auth/email-already-in-use"?"Email ya registrado. Pulsa Entrar.":"No se pudo registrar.");}};
+    window.logout=async function(){await signOut(auth);};
+
+    window.guardar=async function(){if(!currentUser){agendaMsg.textContent="Inicia sesión.";return;}const titulo=document.getElementById("titulo").value.trim(),fecha=autoFormatFecha(document.getElementById("fecha").value),tipo=document.getElementById("tipo").value.trim(),rec=document.getElementById("recurrencia").value,recor=parseInt(document.getElementById("recordatorio").value,10),cat=document.getElementById("categoriaAviso").value;document.getElementById("fecha").value=fecha;if(!titulo||!fecha||!tipo){agendaMsg.textContent="Completa título, fecha y tipo.";return;}if(!parseFecha(fecha)){agendaMsg.textContent="Fecha no válida.";return;}try{await addDoc(collection(db,"tareas"),{titulo,fecha,tipo,recurrencia:rec,recordatorio:recor,categoriaAviso:cat,estado:"pendiente",user:currentUser.uid,createdAt:Date.now(),lastDoneOccurrence:""});await registrarBitacora(`Evento: ${titulo}`);["titulo","fecha","tipo"].forEach(id=>document.getElementById(id).value="");document.getElementById("recurrencia").value="ninguna";document.getElementById("recordatorio").value="0";document.getElementById("categoriaAviso").value="auto";agendaMsg.textContent="Guardado.";await cargar();}catch{agendaMsg.textContent="Error al guardar.";}};
+
+    async function crearTareaPorVoz(texto){if(!currentUser)return;let limpio=texto.replace(/^(añadir|crear|nueva) tarea/i,"").trim();if(!limpio){setOxkioRespuesta("No he podido extraer la tarea.");return;}let fecha=formatFecha(todayDate()),titulo=limpio;if(limpio.toLowerCase().includes("mañana")){fecha=formatFecha(addDays(todayDate(),1));titulo=titulo.replace(/mañana/ig,"").trim();}const f8=limpio.match(/\d{8}/);if(f8){fecha=autoFormatFecha(f8[0]);titulo=titulo.replace(f8[0],"").trim();}if(!titulo)titulo="Tarea por voz";try{await addDoc(collection(db,"tareas"),{titulo,fecha,tipo:"Voz",recurrencia:"ninguna",recordatorio:0,categoriaAviso:"auto",estado:"pendiente",user:currentUser.uid,createdAt:Date.now(),lastDoneOccurrence:""});await registrarBitacora(`Voz: ${titulo}`);await cargar();setOxkioRespuesta(`Creada: ${titulo}.`);}catch{setOxkioRespuesta("Error creando tarea.");}}
+
+    window.procesarEntrada=async function(){if(!currentUser)return;const input=document.getElementById("entradaRapida");const txt=input.value.trim();if(!txt)return;let titulo=txt,fecha=formatFecha(todayDate());if(txt.toLowerCase().includes("mañana")){fecha=formatFecha(addDays(todayDate(),1));titulo=titulo.replace(/mañana/ig,"").trim();}const fm=txt.match(/\d{8}/);if(fm){fecha=autoFormatFecha(fm[0]);titulo=titulo.replace(fm[0],"").trim();}if(!titulo)titulo="Nuevo evento";try{await addDoc(collection(db,"tareas"),{titulo,fecha,tipo:"General",recurrencia:"ninguna",recordatorio:0,categoriaAviso:"auto",estado:"pendiente",user:currentUser.uid,createdAt:Date.now(),lastDoneOccurrence:""});await registrarBitacora(`Entrada: ${titulo}`);input.value="";await cargar();}catch{await registrarIncidencia("agenda",`Error entrada: ${txt}`);}};
+
+    window.marcar=async function(id,occ,rec){const ref=doc(db,"tareas",id);if(rec&&rec!=="ninguna")await updateDoc(ref,{lastDoneOccurrence:occ});else await updateDoc(ref,{estado:"hecho"});await registrarBitacora("Tarea hecha.");await cargar();};
+
+    window.resetApp=async function(){if(!currentUser)return;if(!confirm("¿Borrar datos de prueba?"))return;for(const c of["tareas","config","documentos","incidencias","reglas","bitacora"]){const q=query(collection(db,c),where("user","==",currentUser.uid));const snap=await getDocs(q);for(const d of snap.docs)await deleteDoc(doc(db,c,d.id));}configMsg.textContent="Reiniciado.";await cargar();await cargarConfigCEO();await cargarCorreoResumen();};
+
+    async function cargar(){if(!currentUser)return;const hoy=document.getElementById("hoy"),prox=document.getElementById("proximos"),ag=document.getElementById("agenda"),urg=document.getElementById("urgentes"),av=document.getElementById("avisosAutomaticos");hoy.innerHTML=prox.innerHTML=ag.innerHTML=urg.innerHTML=av.innerHTML="Cargando...";const q=query(collection(db,"tareas"),where("user","==",currentUser.uid));const snap=await getDocs(q);const items=[];snap.forEach(d=>items.push({id:d.id,...d.data()}));items.sort((a,b)=>{const fa=getNextOccurrence(a),fb=getNextOccurrence(b);if(fa&&fb)return fa-fb;return(a.createdAt||0)-(b.createdAt||0);});let hH="",pH="",aH="",uH="",avH="",pend=0,hechas=0,hoyC=0,semC=0,urgC=0,retC=0;for(const item of items){const no=getNextOccurrence(item),diff=no?diasHasta(no):null,rec=item.recurrencia||"ninguna",recor=Number.isFinite(item.recordatorio)?item.recordatorio:0,cat=item.categoriaAviso||"auto",occ=no?occurrenceKey(no):"",done=isDoneCurrentOccurrence(item,no),prior=tagPrioridad(diff,done,cat);if(done)hechas++;else pend++;aH+=`<div class="task ${done?"done":""}"><b>${item.titulo}</b><br>Base: ${item.fecha} - ${item.tipo}<br><span class="tag tag-blue">${recurrenciaTexto(rec)}</span>${no?`<span class="tag">${done?"Cerrada":"Próxima: "+occ}</span>`:""}<span class="tag ${prior.clase}">${prior.texto}</span><span class="tag">Aviso: ${recor===0?"mismo día":recor+" día(s) antes"}</span>${!done?`<br><button class="btn-success" onclick="marcar('${item.id}','${occ}','${rec}')">Hecho</button>`:""}</div>`;if(done)continue;if(diff!==null&&diff<0){retC++;uH+=`<div class="task"><b>${item.titulo}</b><br><span class="tag tag-red">Retrasado</span><br><button class="btn-success" onclick="marcar('${item.id}','${occ}','${rec}')">Hecho</button></div>`;}if(diff===0){hoyC++;urgC++;hH+=`<div class="task"><b>${item.titulo}</b><br><span class="tag tag-red">Hoy</span><br><button class="btn-success" onclick="marcar('${item.id}','${occ}','${rec}')">Hecho</button></div>`;}if(diff!==null&&diff>=0&&diff<=7){semC++;pH+=`<div class="task"><b>${item.titulo}</b><br><span class="tag ${diff<=1?"tag-orange":"tag-blue"}">${diff===0?"Hoy":"En "+diff+" día(s)"}</span><br><button class="btn-success" onclick="marcar('${item.id}','${occ}','${rec}')">Hecho</button></div>`;}if(diff===1){urgC++;uH+=`<div class="task"><b>${item.titulo}</b><br><span class="tag tag-orange">Mañana</span><br><button class="btn-success" onclick="marcar('${item.id}','${occ}','${rec}')">Hecho</button></div>`;}if(diff!==null&&diff===recor){const ta=tagAviso(diff);avH+=`<div class="task"><b>${item.titulo}</b><br><span class="tag ${ta.clase}">${ta.texto}</span><br><button class="btn-success" onclick="marcar('${item.id}','${occ}','${rec}')">Hecho</button></div>`;}}const renC=await cargarRenovaciones();hoy.innerHTML=hH||"Nada hoy";prox.innerHTML=pH||"Nada próximo";ag.innerHTML=aH||"Sin datos";urg.innerHTML=uH||"Nada urgente";av.innerHTML=avH||"Sin avisos";renderResumen(pend,hechas,hoyC,semC,urgC,retC,renC||0);const ca=renderCargaSemanal(semC,retC);renderSugerencia(pend,hoyC,semC,urgC,retC,ca,renC||0);await cargarCorreoResumen();await cargarDocsResumen();await cargarListaDocs();applyModoCEO();}
+
+    function getVoiceRecognition(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;const r=new SR();r.lang="es-ES";r.interimResults=false;r.continuous=false;r.maxAlternatives=1;return r;}
+
+    async function procesarComandoVoz(textoOriginal){
+      const texto=(textoOriginal||"").toLowerCase().trim();
+      if(!texto){setOxkioRespuesta("No he entendido.");return;}
+      if(texto.includes("organiza documentos")||texto.includes("organiza drive")){await autoOrganizarDocumentos();return;}
+      if(texto.includes("ver drive")||texto.includes("estructura drive")){await verDrive();setOxkioRespuesta("Mostrando Drive.");return;}
+      if(texto.includes("analiza sistema")){await window.analizarSistema();return;}
+      if(texto.startsWith("añadir tarea")||texto.startsWith("crear tarea")||texto.startsWith("nueva tarea")){await crearTareaPorVoz(textoOriginal);return;}
+      if(texto.includes("quitar modo ceo")||texto.includes("salir modo ceo")){if(modoCEO)window.toggleModoCEO();setOxkioRespuesta("Modo CEO desactivado.");return;}
+      if(texto.includes("modo ceo")){if(!modoCEO)window.toggleModoCEO();setOxkioRespuesta("Modo CEO activado.");return;}
+      if(texto.includes("documentos")){openSection("docsListaContent");setOxkioRespuesta("Mostrando documentos.");return;}
+      if(texto.includes("agenda")){openSection("agendaContent");setOxkioRespuesta("Mostrando agenda.");return;}
+      if(texto.includes("hoy")){openSection("hoyContent");setOxkioRespuesta("Mostrando hoy.");return;}
+      if(texto.includes("urgentes")){openSection("urgentesContent");setOxkioRespuesta("Mostrando urgentes.");return;}
+      if(texto.includes("resumen")){openSection("resumenContent");setOxkioRespuesta("Mostrando resumen.");return;}
+      if(texto.includes("próximos")){openSection("proximosContent");setOxkioRespuesta("Mostrando próximos.");return;}
+      if(texto.includes("incidencias")){await window.cargarIncidencias();setOxkioRespuesta("Mostrando incidencias.");return;}
+      if(texto.includes("reglas")){await window.cargarReglas();setOxkioRespuesta("Mostrando reglas.");return;}
+      if(texto.includes("bitácora")){await window.cargarBitacora();setOxkioRespuesta("Mostrando aprendizaje.");return;}
+      if(texto.includes("configuración")){if(modoCEO){setOxkioRespuesta("No disponible en modo CEO.");return;}configBox.classList.remove("content-hidden");setOxkioRespuesta("Mostrando configuración.");return;}
+      setOxkioRespuesta(`Oído: "${textoOriginal}". Orden no programada aún.`);
+    }
+
+    window.iniciarVoz=function(){if(!currentUser)return;const rec=getVoiceRecognition();if(!rec){setEstadoVoz("Voz no disponible.",false);setOxkioRespuesta("Este navegador no soporta voz.");return;}recognition=rec;escuchando=true;setEstadoVoz("Escuchando...",true);setOxkioRespuesta("Te escucho.");recognition.onresult=async(e)=>{const t=e.results[0][0].transcript;setEstadoVoz(`Oído: ${t}`,false);await procesarComandoVoz(t);};recognition.onerror=()=>{escuchando=false;setEstadoVoz("Error de voz.",false);setOxkioRespuesta("No he podido escuchar. Inténtalo.");};recognition.onend=()=>{escuchando=false;if(voiceStatus.textContent==="Escuchando...")setEstadoVoz("Voz en espera.",false);else floatingVoiceBtn.classList.remove("listening");};recognition.start();};
+
+    floatingVoiceBtn.addEventListener("click",()=>window.iniciarVoz());
+
+    function mostrarEstadoSeguridad(){oxkioRespuesta.innerHTML=`🔐 Acceso seguro activo<br>✔ Autenticación protegida<br>✔ Entorno privado<br>✔ Datos del usuario<br>Oxkio © 2026`;}
+
+    showLoading();
+    onAuthStateChanged(auth,async(u)=>{if(u){currentUser=u;showApp(u.email);await cargar();await cargarConfigCEO();mostrarEstadoSeguridad();}else{currentUser=null;showLogin("");}});
+
+  </script>
+</body>
+</html>
