@@ -2,10 +2,14 @@
   "name": "oxkio-app",
   "version": "1.0.0",
   "private": true,
+  "description": "Oxkio Executive AI Assistant",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "start": "serve -s . -l ${PORT:-3000}"
+    "start": "npx serve -s . -l $PORT"
   },
   "dependencies": {
-    "serve": "latest"
+    "serve": "^14.2.4"
   }
 }
