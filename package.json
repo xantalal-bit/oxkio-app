@@ -7,9 +7,6 @@
     "node": ">=18"
   },
   "scripts": {
-    "start": "npx serve -s . -l $PORT"
-  },
-  "dependencies": {
-    "serve": "^14.2.4"
+    "start": "python3 -m http.server $PORT"
   }
 }
