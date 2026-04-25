@@ -2,6 +2,10 @@
   "name": "oxkio-app",
   "version": "1.0.0",
   "private": true,
+  "description": "Oxkio Executive AI Assistant",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "start": "npx http-server -p $PORT"
   },
